@@ -28,7 +28,7 @@ CREATE TABLE Event (
     name VARCHAR(20),
     location VARCHAR(20),
     time DATETIME
-);
+); 
 
 CREATE TABLE Employer (
     employer_id INTEGER PRIMARY KEY,
@@ -81,7 +81,7 @@ CREATE TABLE Driver(
     wins INTEGER,
     points FLOAT,
     overallstanding INTEGER,
-    gpposition INTEGER,
+    gpposition VARCHAR(3),
     FOREIGN KEY (team_id) REFERENCES team(employer_id)
 );
 
@@ -177,7 +177,7 @@ INSERT INTO Employer(employer_id, name, role) VALUES (13, 'COTA Concerts', 'conc
 
 --INSERTING TEAMS
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (1, 'Alfa Romeo Racing Orlen', 'f1team', 0, 0, 0);
-INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (2, 'Scuderia AlphaTauri Honda ', 'f1team', 0, 0, 0);
+INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (2, 'Scuderia AlphaTauri Honda', 'f1team', 0, 0, 0);
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (3, 'Alpine F1 Team', 'f1team', 0, 0, 0);
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (4, 'Aston Martin Cognizant F1 Team', 'f1team', 0, 0, 0);
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (5, 'Scuderia Ferrari Mission Winnow', 'f1team', 0, 0, 0);
@@ -199,11 +199,11 @@ INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gppo
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (9, 5,  'Charles Leclerc', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (10, 5, 'Carlos Sainz Jr.', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (11, 6, 'Nikita Mazepin', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (12, 6, 'Mich Schumacher', 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (12, 6, 'Mick Schumacher', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (13, 7, 'Daniel Ricciardo', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (14, 7, 'Lando Norris', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (15, 8, 'Lewis Hamilton', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (16, 8, 'Valterri Bottas', 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (16, 8, 'Valtteri Bottas', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (17, 9, 'Sergio Perez', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (18, 9, 'Max Verstappen', 0, 0, 0, 0);
 INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (19, 10,'Nicholas Latifi', 0, 0, 0, 0);
@@ -270,3 +270,155 @@ INSERT INTO Spectator(spec_id, name) VALUES (8, "Eduard Tollemache");
 INSERT INTO Spectator(spec_id, name) VALUES (9, "Spongebob Squarepants");
 INSERT INTO Spectator(spec_id, name) VALUES (10, "Zuko Ozai");
 INSERT INTO Spectator(spec_id, name) VALUES (11, "Shubham Anna");
+
+--20 queries
+
+
+--UPDATE Driver Standings
+UPDATE Driver
+SET wins = 8, points = 287.5, overallstanding = 1, gpposition = 1
+WHERE name = 'Max Verstappen';
+
+UPDATE Driver
+SET wins = 5, points = 275.5, overallstanding = 2, gpposition = 2
+WHERE name = 'Lewis Hamilton';
+
+UPDATE Driver
+SET wins = 1, points = 185, overallstanding = 3, gpposition = 6
+WHERE name = 'Valtteri Bottas';
+
+UPDATE Driver
+SET wins = 1, points = 150, overallstanding = 4, gpposition = 3
+WHERE name = 'Sergio Perez';
+
+UPDATE Driver
+SET wins = 0, points = 149, overallstanding = 5, gpposition = 8
+WHERE name = 'Lando Norris';
+
+UPDATE Driver
+SET wins = 0, points = 128, overallstanding = 6, gpposition = 4
+WHERE name = 'Charles Leclerc';
+
+UPDATE Driver
+SET wins = 1, points = 122.5, overallstanding = 7, gpposition = 7
+WHERE name = 'Carlos Sainz Jr.';
+
+UPDATE Driver
+SET wins = 1, points = 105, overallstanding = 8, gpposition = 5
+WHERE name = 'Daniel Ricciardo';
+
+UPDATE Driver
+SET wins = 1, points = 74, overallstanding = 9, gpposition = 'DNF'
+WHERE name = 'Pierre Gasly';
+
+UPDATE Driver
+SET wins = 0, points = 58, overallstanding = 10, gpposition = 'DNF'
+WHERE name = 'Fernando Alonso';
+
+UPDATE Driver
+SET wins = 1, points = 46, overallstanding = 11, gpposition = 'DNF'
+WHERE name = 'Esteban Ocon';
+
+UPDATE Driver
+SET wins = 0, points = 36, overallstanding = 12, gpposition = 10
+WHERE name = 'Sebastian Vettel';
+
+UPDATE Driver
+SET wins = 0, points = 26, overallstanding = 13, gpposition = 12
+WHERE name = 'Lance Stroll';
+
+UPDATE Driver
+SET wins = 0, points = 20, overallstanding = 14, gpposition = 9
+WHERE name = 'Yuki Tsunoda';
+
+UPDATE Driver
+SET wins = 0, points = 16, overallstanding = 15, gpposition = 14
+WHERE name = 'George Russell';
+
+UPDATE Driver
+SET wins = 0, points = 7, overallstanding = 16, gpposition = 15
+WHERE name = 'Nicholas Latifi';
+
+UPDATE Driver
+SET wins = 0, points = 6, overallstanding = 17, gpposition = 17
+WHERE name = 'Kimi Raikkonen';
+
+UPDATE Driver
+SET wins = 0, points = 1, overallstanding = 18, gpposition = 11
+WHERE name = 'Antonio Giovinazzi';
+
+UPDATE Driver
+SET wins = 0, points = 0, overallstanding = 19, gpposition = 16
+WHERE name = 'Mick Schumacher';
+
+UPDATE Driver
+SET wins = 0, points = 0, overallstanding = 20, gpposition = 'DNS'
+WHERE name = 'Robert Kubica';  
+
+UPDATE Driver
+SET wins = 0, points = 0, overallstanding = 21, gpposition = 17
+WHERE name = 'Nikita Mazepin';  
+
+
+--WDC standings
+SELECT driver_id, name, points
+FROM Driver
+ORDER BY points DESC;
+
+--Update teams
+UPDATE Team
+SET wins = 6, points = 460.5, overallstanding = 1
+WHERE name = 'Mercedes-AMG Petronas F1 Team';
+
+UPDATE Team
+SET wins = 9, points = 437.5, overallstanding = 2
+WHERE name = 'Red Bull Racing Honda';
+
+UPDATE Team
+SET wins = 1, points = 254, overallstanding = 3
+WHERE name = 'McLaren F1 Team';
+
+UPDATE Team
+SET wins = 0, points = 250.5, overallstanding = 4
+WHERE name = 'Scuderia Ferrari Mission Winnow';
+
+UPDATE Team
+SET wins = 1, points = 104, overallstanding = 5
+WHERE name = 'Alpine F1 Team';
+
+UPDATE Team
+SET wins = 0, points = 94, overallstanding = 6
+WHERE name = 'Scuderia AlphaTauri Honda';
+
+UPDATE Team
+SET wins = 0, points = 62, overallstanding = 7
+WHERE name = 'Aston Martin Cognizant F1 Team';
+
+UPDATE Team
+SET wins = 0, points = 23, overallstanding = 8
+WHERE name = 'Williams Racing';
+
+UPDATE Team
+SET wins = 0, points = 7, overallstanding = 9
+WHERE name = 'Alfa Romeo Racing Orlen';
+
+UPDATE Team
+SET wins = 0, points = 0, overallstanding = 10
+WHERE name = 'Uralkali Haas F1 Team';
+
+--WCC Standings
+SELECT employer_id, name, points
+FROM Team
+ORDER BY points DESC
+
+--Events before the race
+SELECT E1.name, E1.location, E1.time
+FROM Event E1, Event E2
+WHERE E2.name = 'Formula 1 Grand Prix' AND
+    E1.time < E2.time;
+
+--Nonrace events
+SELECT name, location, time
+FROM Event
+WHERE Event.name NOT LIKE '%Formula 1%';
+
