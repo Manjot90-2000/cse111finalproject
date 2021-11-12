@@ -82,6 +82,7 @@ CREATE TABLE Driver(
     points FLOAT,
     overallstanding INTEGER,
     gpposition VARCHAR(3),
+    fastestlap INTEGER,
     FOREIGN KEY (team_id) REFERENCES team(employer_id)
 );
 
@@ -95,14 +96,14 @@ CREATE TABLE EventEmployers(
 );
 
 CREATE TABLE Task (
-    event_id INTEGER,
-    employer_id INTEGER,
     task_id INTEGER,
+    employer_id INTEGER,
+    employee_id INTEGER,
     description VARCHAR(30),
     deadline DATETIME,
-    FOREIGN KEY (event_id) REFERENCES event(event_id),
-    FOREIGN KEY (employer_id) REFERENCES event(employer_id),
-    CONSTRAINT PK PRIMARY KEY (event_id, employer_id, task_id)
+    FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id),
+    CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, task_id)
 );
 
 CREATE TABLE SpecDriverViewTracker (
@@ -188,27 +189,27 @@ INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES 
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (10, 'Williams Racing', 'f1team', 0, 0, 0);
 
 --INSERTING DRIVERS
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (1, 1,  'Kimi Raikkonen', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (2, 1,  'Antonio Giovinazzi', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (3, 2,  'Pierre Gasly', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (4, 2,  'Yuki Tsunoda', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (5, 3,  'Fernando Alonso', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (6, 3,  'Esteban Ocon', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (7, 4,  'Sebastian Vettel', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (8, 4,  'Lance Stroll', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (9, 5,  'Charles Leclerc', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (10, 5, 'Carlos Sainz Jr.', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (11, 6, 'Nikita Mazepin', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (12, 6, 'Mick Schumacher', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (13, 7, 'Daniel Ricciardo', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (14, 7, 'Lando Norris', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (15, 8, 'Lewis Hamilton', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (16, 8, 'Valtteri Bottas', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (17, 9, 'Sergio Perez', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (18, 9, 'Max Verstappen', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (19, 10,'Nicholas Latifi', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (20, 10,'George Russell', 0, 0, 0, 0);
-INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition) VALUES (21, 1, 'Robert Kubica', 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (1, 1,  'Kimi Raikkonen',        0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (2, 1,  'Antonio Giovinazzi',    0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (3, 2,  'Pierre Gasly',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (4, 2,  'Yuki Tsunoda',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (5, 3,  'Fernando Alonso',       0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (6, 3,  'Esteban Ocon',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (7, 4,  'Sebastian Vettel',      0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (8, 4,  'Lance Stroll',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (9, 5,  'Charles Leclerc',       0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (10, 5, 'Carlos Sainz Jr.',      0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (11, 6, 'Nikita Mazepin',        0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (12, 6, 'Mick Schumacher',       0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (13, 7, 'Daniel Ricciardo',      0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (14, 7, 'Lando Norris',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (15, 8, 'Lewis Hamilton',        0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (16, 8, 'Valtteri Bottas',       0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (17, 9, 'Sergio Perez',          0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (18, 9, 'Max Verstappen',        0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (19, 10,'Nicholas Latifi',       0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (20, 10,'George Russell',        0, 0, 0, 0, 0);
+INSERT INTO Driver(driver_id, team_id, name, wins, points, overallstanding, gpposition, fastestlap) VALUES (21, 1, 'Robert Kubica',         0, 0, 0, 0, 0);
 
 --INSERTING EVENTS
 INSERT INTO Event(event_id, name, location, time) VALUES (1, 'Formula 1 Free Practice 1', 'COTA Track', '2021-10-22 11:30:00');
@@ -274,98 +275,98 @@ INSERT INTO Spectator(spec_id, name) VALUES (11, "Shubham Anna");
 --20 queries
 
 
---UPDATE Driver Standings
+--#1 UPDATE Driver Standings
 UPDATE Driver
-SET wins = 8, points = 287.5, overallstanding = 1, gpposition = 1
+SET wins = 8, points = 287.5, overallstanding = 1, gpposition = 1, fastestlap = 0
 WHERE name = 'Max Verstappen';
 
 UPDATE Driver
-SET wins = 5, points = 275.5, overallstanding = 2, gpposition = 2
+SET wins = 5, points = 275.5, overallstanding = 2, gpposition = 2, fastestlap = 1
 WHERE name = 'Lewis Hamilton';
 
 UPDATE Driver
-SET wins = 1, points = 185, overallstanding = 3, gpposition = 6
+SET wins = 1, points = 185, overallstanding = 3, gpposition = 6, fastestlap = 0
 WHERE name = 'Valtteri Bottas';
 
 UPDATE Driver
-SET wins = 1, points = 150, overallstanding = 4, gpposition = 3
+SET wins = 1, points = 150, overallstanding = 4, gpposition = 3, fastestlap = 0
 WHERE name = 'Sergio Perez';
 
 UPDATE Driver
-SET wins = 0, points = 149, overallstanding = 5, gpposition = 8
+SET wins = 0, points = 149, overallstanding = 5, gpposition = 8, fastestlap = 0
 WHERE name = 'Lando Norris';
 
 UPDATE Driver
-SET wins = 0, points = 128, overallstanding = 6, gpposition = 4
+SET wins = 0, points = 128, overallstanding = 6, gpposition = 4, fastestlap = 0
 WHERE name = 'Charles Leclerc';
 
 UPDATE Driver
-SET wins = 1, points = 122.5, overallstanding = 7, gpposition = 7
+SET wins = 1, points = 122.5, overallstanding = 7, gpposition = 7, fastestlap = 0
 WHERE name = 'Carlos Sainz Jr.';
 
 UPDATE Driver
-SET wins = 1, points = 105, overallstanding = 8, gpposition = 5
+SET wins = 1, points = 105, overallstanding = 8, gpposition = 5, fastestlap = 0
 WHERE name = 'Daniel Ricciardo';
 
 UPDATE Driver
-SET wins = 1, points = 74, overallstanding = 9, gpposition = 'DNF'
+SET wins = 1, points = 74, overallstanding = 9, gpposition = 'DNF', fastestlap = 0
 WHERE name = 'Pierre Gasly';
 
 UPDATE Driver
-SET wins = 0, points = 58, overallstanding = 10, gpposition = 'DNF'
+SET wins = 0, points = 58, overallstanding = 10, gpposition = 'DNF', fastestlap = 0
 WHERE name = 'Fernando Alonso';
 
 UPDATE Driver
-SET wins = 1, points = 46, overallstanding = 11, gpposition = 'DNF'
+SET wins = 1, points = 46, overallstanding = 11, gpposition = 'DNF', fastestlap = 0
 WHERE name = 'Esteban Ocon';
 
 UPDATE Driver
-SET wins = 0, points = 36, overallstanding = 12, gpposition = 10
+SET wins = 0, points = 36, overallstanding = 12, gpposition = 10, fastestlap = 0
 WHERE name = 'Sebastian Vettel';
 
 UPDATE Driver
-SET wins = 0, points = 26, overallstanding = 13, gpposition = 12
+SET wins = 0, points = 26, overallstanding = 13, gpposition = 12, fastestlap = 0
 WHERE name = 'Lance Stroll';
 
 UPDATE Driver
-SET wins = 0, points = 20, overallstanding = 14, gpposition = 9
+SET wins = 0, points = 20, overallstanding = 14, gpposition = 9, fastestlap = 0
 WHERE name = 'Yuki Tsunoda';
 
 UPDATE Driver
-SET wins = 0, points = 16, overallstanding = 15, gpposition = 14
+SET wins = 0, points = 16, overallstanding = 15, gpposition = 14, fastestlap = 0
 WHERE name = 'George Russell';
 
 UPDATE Driver
-SET wins = 0, points = 7, overallstanding = 16, gpposition = 15
+SET wins = 0, points = 7, overallstanding = 16, gpposition = 15, fastestlap = 0
 WHERE name = 'Nicholas Latifi';
 
 UPDATE Driver
-SET wins = 0, points = 6, overallstanding = 17, gpposition = 17
+SET wins = 0, points = 6, overallstanding = 17, gpposition = 13, fastestlap = 0
 WHERE name = 'Kimi Raikkonen';
 
 UPDATE Driver
-SET wins = 0, points = 1, overallstanding = 18, gpposition = 11
+SET wins = 0, points = 1, overallstanding = 18, gpposition = 11, fastestlap = 0
 WHERE name = 'Antonio Giovinazzi';
 
 UPDATE Driver
-SET wins = 0, points = 0, overallstanding = 19, gpposition = 16
+SET wins = 0, points = 0, overallstanding = 19, gpposition = 16, fastestlap = 0
 WHERE name = 'Mick Schumacher';
 
 UPDATE Driver
-SET wins = 0, points = 0, overallstanding = 20, gpposition = 'DNS'
+SET wins = 0, points = 0, overallstanding = 20, gpposition = 'DNS', fastestlap = 0
 WHERE name = 'Robert Kubica';  
 
 UPDATE Driver
-SET wins = 0, points = 0, overallstanding = 21, gpposition = 17
+SET wins = 0, points = 0, overallstanding = 21, gpposition = 17, fastestlap = 0
 WHERE name = 'Nikita Mazepin';  
 
 
---WDC standings
+--#2 WDC standings
 SELECT driver_id, name, points
 FROM Driver
 ORDER BY points DESC;
 
---Update teams
+--#3 Update teams
 UPDATE Team
 SET wins = 6, points = 460.5, overallstanding = 1
 WHERE name = 'Mercedes-AMG Petronas F1 Team';
@@ -406,19 +407,180 @@ UPDATE Team
 SET wins = 0, points = 0, overallstanding = 10
 WHERE name = 'Uralkali Haas F1 Team';
 
---WCC Standings
+--#4 WCC Standings
 SELECT employer_id, name, points
 FROM Team
-ORDER BY points DESC
+ORDER BY points DESC;
 
---Events before the race
+--#5 Events before the race
 SELECT E1.name, E1.location, E1.time
 FROM Event E1, Event E2
 WHERE E2.name = 'Formula 1 Grand Prix' AND
     E1.time < E2.time;
 
---Nonrace events
+--#6 Nonrace events
 SELECT name, location, time
 FROM Event
 WHERE Event.name NOT LIKE '%Formula 1%';
 
+--#7 Print out all marshals, sorted by location
+SELECT name, tracklocation
+FROM Marshal
+ORDER BY tracklocation;
+
+
+--#8 Update Marshals to pad their location
+UPDATE Marshal
+SET tracklocation = printf('T%02d',CAST(substr(tracklocation, 2, 2) AS INTEGER))
+WHERE CAST(substr(tracklocation, 2, 2) AS INTEGER) IN
+    (SELECT CAST(substr(tracklocation, 2, 2) AS INTEGER) AS value
+     FROM Marshal
+     WHERE CAST(substr(tracklocation, 2, 2) AS INTEGER) IS substr(tracklocation, 2, 2)
+    )
+    AND CAST(substr(tracklocation, 2, 2) AS INTEGER) < 10;
+
+
+--#9 Join team and driver to find total points from the teammates (basically, WCC standings but not using the points column from Team)
+SELECT T.employer_id, T.name, SUM(D.points) as points
+From Team T, Driver D
+WHERE T.employer_id = D.team_id
+GROUP BY T.employer_id
+ORDER BY points DESC;
+
+--#10 Print out the top 10 results from the race
+SELECT driver_id, name, CAST(gpposition AS INTEGER), points AS TotalPoints
+From Driver
+WHERE CAST(gpposition AS INTEGER) IS gpposition
+ORDER BY CAST(gpposition AS INTEGER)
+limit 10;
+
+--#11 Print out the top 10 + points, fastest lap included
+SELECT driver_id, name,
+    CASE fastestlap = 1
+        WHEN true then points + 1
+        else points
+    END AS points, TotalPoints
+FROM(
+    SELECT driver_id, name, 
+        CASE
+            when gpposition = 1 then 25
+            when gpposition = 2 then 18
+            when gpposition = 3 then 15
+            when gpposition = 4 then 12
+            when gpposition = 5 then 10
+            when gpposition = 6 then 8
+            when gpposition = 7 then 6
+            when gpposition = 8 then 4
+            when gpposition = 9 then 2
+            when gpposition = 10 then 1
+        END as points
+        ,points AS TotalPoints, fastestlap
+    From Driver
+    WHERE CAST(gpposition AS INTEGER) IS gpposition
+    ORDER BY CAST(gpposition AS INTEGER)
+    limit 10
+    );
+
+--#12 Alfa Romeo all hands meeting 1 hour before FP1
+INSERT INTO Task(task_id, employer_id, employee_id, description, deadline)
+    SELECT 1, E1.employer_id, employee_id, 'Alfa Romeo All Hands Meeting', '2021-10-22 10:30:00'
+    FROM Employee E1, Employer E2
+    WHERE E1.employer_id = E2.employer_id AND E2.name = 'Alfa Romeo Racing Orlen';
+
+--#13 Print out all tasks Alfa Romeo employee are doing
+SELECT E1.name, E2.name, description, deadline
+    FROM Employee E1, Employer E2, Task T
+    WHERE E1.employer_id = E2.employer_id AND T.employer_id = E2.employer_id AND E2.name = 'Alfa Romeo Racing Orlen';
+
+--#14 - Insert into EventEmployers
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(1,11);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(1,12);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(2,11);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(2,12);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(3,11);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(3,12);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(4,11);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(4,12);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(5,11);
+INSERT INTO EventEmployers(event_id, employer_id) VALUES(5,12);
+
+--#15 - Print out all employers doing official race events
+SELECT EvEm.event_id, Ev.name, Em.name 
+FROM Event Ev, Employer Em, EventEmployers EvEm
+WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Ev.name LIKE '%Formula 1%';
+
+--#16 - Print out the number of employing groups running official race events
+SELECT EvEm.event_id, Ev.name, count(distinct Em.name)
+FROM Event Ev, Employer Em, EventEmployers EvEm
+WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Ev.name LIKE '%Formula 1%'
+GROUP BY EvEm.event_id;
+
+--#17 - Print out all drivers that DNFed (did not finish)
+SELECT *
+FROM Driver
+Where gpposition = 'DNF';
+
+-- Update driver to be disqualified
+UPDATE Driver
+SET gpposition = 'DSQ'
+WHERE name = 'Pierre Gasly';
+
+UPDATE Driver
+SET gpposition = 'DSQ'
+WHERE name = 'Yuki Tsunoda';
+
+UPDATE Driver
+SET gpposition = 'DSQ'
+WHERE name = 'Fernando Alonso';
+
+--#18 - Set # of penalties = number of disqualified drivers
+UPDATE Steward
+SET numberofpenalties =
+    (SELECT count(*)
+    FROM Driver
+    WHERE gpposition = 'DSQ'
+    );
+
+--#19 - If both drivers of a team got DSQed, fine them 10 points
+UPDATE Team
+SET points = points - 10
+WHERE employer_id IN
+    (SELECT distinct(T.employer_id)
+    FROM Team T, Driver D
+    Where T.employer_id = D.team_id AND D.gpposition = 'DSQ'
+    GROUP BY employer_id
+    HAVING count(distinct D.driver_id) >= 2
+    );
+
+    
+
+--#20 - WCC Race results (how many points the teams scored this race
+SELECT T.employer_id, T.name, SUM(Dr.points) as points
+From Team T,
+    (SELECT driver_id, name,
+    CASE fastestlap = 1
+        WHEN true then points + 1
+        else points
+    END AS points, TotalPoints, team_id
+    FROM(
+        SELECT driver_id, Driver.name, 
+            CASE
+                when gpposition = 1 then 25
+                when gpposition = 2 then 18
+                when gpposition = 3 then 15
+                when gpposition = 4 then 12
+                when gpposition = 5 then 10
+                when gpposition = 6 then 8
+                when gpposition = 7 then 6
+                when gpposition = 8 then 4
+                when gpposition = 9 then 2
+                when gpposition = 10 then 1
+                else 0
+                END as points
+                ,Driver.points AS TotalPoints, fastestlap, team_id
+        From Driver
+        ORDER BY gpposition
+    )) Dr
+WHERE T.employer_id = Dr.team_id
+GROUP BY T.employer_id
+ORDER BY points DESC
