@@ -1,21 +1,21 @@
 
 --Drop all tables in our our database
-DROP TABLE Spectator;
-DROP TABLE Event;
-DROP TABLE Employer;
-DROP TABLE Employee;
-DROP TABLE Steward;
-DROP TABLE Marshal;
-DROP TABLE Team;
-DROP TABLE Driver;
-DROP TABLE EventEmployers;
-DROP TABLE Task;
-DROP TABLE SpecDriverViewTracker;
-DROP TABLE StewardDriverUpdateTracker;
-DROP TABLE StewardDriverViewTracker;
-DROP TABLE SpecTeamViewTracker;
-DROP TABLE StewardTeamUpdateTracker;
-DROP TABLE StewardTeamViewTracker;
+DROP TABLE IF EXISTS Spectator;
+DROP TABLE IF EXISTS Event;
+DROP TABLE IF EXISTS Employer;
+DROP TABLE IF EXISTS Employee;
+DROP TABLE IF EXISTS Steward;
+DROP TABLE IF EXISTS Marshal;
+DROP TABLE IF EXISTS Team;
+DROP TABLE IF EXISTS Driver;
+DROP TABLE IF EXISTS EventEmployers;
+DROP TABLE IF EXISTS Task;
+DROP TABLE IF EXISTS SpecDriverViewTracker;
+DROP TABLE IF EXISTS StewardDriverUpdateTracker;
+DROP TABLE IF EXISTS StewardDriverViewTracker;
+DROP TABLE IF EXISTS SpecTeamViewTracker;
+DROP TABLE IF EXISTS StewardTeamUpdateTracker;
+DROP TABLE IF EXISTS StewardTeamViewTracker;
 
 
 CREATE TABLE Spectator (
@@ -112,7 +112,7 @@ CREATE TABLE SpecDriverViewTracker (
     timestamp DATETIME,
     FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id),
     FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
-    CONSTRAINT PK PRIMARY KEY (spec_id, driver_id)
+    CONSTRAINT PK PRIMARY KEY (spec_id, driver_id, timestamp)
 );
 
 CREATE TABLE StewardDriverUpdateTracker (
@@ -121,7 +121,7 @@ CREATE TABLE StewardDriverUpdateTracker (
     timestamp DATETIME,
     FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
     FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
-    CONSTRAINT PK PRIMARY KEY (employee_id, driver_id)
+    CONSTRAINT PK PRIMARY KEY (employee_id, driver_id, timestamp)
 );
 
 CREATE TABLE StewardDriverViewTracker (
@@ -130,7 +130,7 @@ CREATE TABLE StewardDriverViewTracker (
     timestamp DATETIME,
     FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
     FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
-    CONSTRAINT PK PRIMARY KEY (employee_id, driver_id)
+    CONSTRAINT PK PRIMARY KEY (employee_id, driver_id, timestamp)
 );
 
 CREATE TABLE SpecTeamViewTracker (
@@ -139,7 +139,7 @@ CREATE TABLE SpecTeamViewTracker (
     timestamp DATETIME,
     FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id),
     FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
-    CONSTRAINT PK PRIMARY KEY (spec_id, employer_id)
+    CONSTRAINT PK PRIMARY KEY (spec_id, employer_id, timestamp)
 );
 
 CREATE TABLE StewardTeamUpdateTracker (
@@ -148,7 +148,7 @@ CREATE TABLE StewardTeamUpdateTracker (
     timestamp DATETIME,
     FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
     FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
-    CONSTRAINT PK PRIMARY KEY (employee_id, employer_id)
+    CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, timestamp)
 );
 
 CREATE TABLE StewardTeamViewTracker (
@@ -157,7 +157,7 @@ CREATE TABLE StewardTeamViewTracker (
     timestamp DATETIME,
     FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
     FOREIGN KEY (employee_id) REFERENCES Team(employee_id),
-    CONSTRAINT PK PRIMARY KEY (employee_id, employer_id)
+    CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, timestamp)
 );
 
 
@@ -220,6 +220,8 @@ INSERT INTO Event(event_id, name, location, time) VALUES (5, 'Formula 1 Grand Pr
 INSERT INTO Event(event_id, name, location, time) VALUES (6, 'Twenty One Pilots Concert', 'Germania Insurance Super Stage', '2021-10-22 19:30:00');
 INSERT INTO Event(event_id, name, location, time) VALUES (7, 'Billy Joel', 'Germania Insurance Super Stage', '2021-10-23 19:30:00');
 INSERT INTO Event(event_id, name, location, time) VALUES (8, 'Austin Polka Band', 'BIERGARTEN (T2)', '2021-10-23 12:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (9, 'Major League Eating Contest', 'ONEDERLAND', '2021-10-23 18:30:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (10, 'Daniel Ricciardo NASCAR DEMO', 'COTA Track', '2021-10-24 8:50:00');
 
 --INSERTING EMPLOYEES (for now just the principals)
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (1, 1, "Frederic Vasseur", "Principal");
@@ -240,6 +242,10 @@ INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (13, 12, "Marc
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (14, 12, "Nora Christensen ", "Marshal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (15, 12, "Misty Silva","Marshal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (16, 12, "Jessica Alonso", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (17, 12, "Ryder Tatham", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (18, 12, "Phoebe Ayers ", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (19, 12, "Emily Hathway","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (20, 12, "Sandra Saunders", "Marshal");
 
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (11, 12, "Micheal Carter", "Marshal", "Pitlane");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (12, 12, "Santiago Holloway", "Marshal", "T10");
@@ -247,17 +253,34 @@ INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES 
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (14, 12, "Nora Christensen", "Marshal", "T1");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (15, 12, "Misty Silva", "Marshal", "Pitlane");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (16, 12, "Jessica Alonso", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (17, 12, "Ryder Tatham", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (18, 12, "Phoebe Ayers ", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (19, 12, "Emily Hathway","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (20, 12, "Sandra Saunders", "Marshal", "T11");
 
 --INSERTING STEWARDS into STEWARDS and EMPLOYEES
-INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (17, 11, "Norton Pender","Steward");
-INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (18, 11, "Emily Jeanes","Steward");
-INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (19, 11, "Josue Harden","Steward");
-INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (20, 11, "Emiliano Romero","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (21, 11, "Norton Pender","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (22, 11, "Emily Jeanes","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (23, 11, "Josue Harden","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (24, 11, "Emiliano Romero","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (25, 11, "Katelijne Essie","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (26, 11, "Maddox Markku","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (27, 11, "Kobe Bryant","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (28, 11, "Stephen Curry","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (29, 11, "Micheal Jordan","Steward");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (30, 11, "Lebron James","Steward");
 
-INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (17, 11, "Norton Pender","Steward", 0);
-INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (18, 11, "Emily Jeanes","Steward", 0);
-INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (19, 11, "Josue Harden","Steward", 0);
-INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (20, 11, "Emiliano Romero","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (21, 11, "Norton Pender","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (22, 11, "Emily Jeanes","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (23, 11, "Josue Harden","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (24, 11, "Emiliano Romero","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (25, 11, "Katelijne Essie","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (26, 11, "Maddox Markku","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (27, 11, "Kobe Bryant","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (28, 11, "Stephen Curry","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (29, 11, "Micheal Jordan","Steward", 0);
+INSERT INTO Steward(employee_id, employer_id, name, role, numberofpenalties) VALUES (30, 11, "Lebron James","Steward", 0);
+
 
 --INSERTING SPECTATORS into SPECTATORS
 INSERT INTO Spectator(spec_id, name) VALUES (1, "Cindy Marini");
@@ -267,10 +290,79 @@ INSERT INTO Spectator(spec_id, name) VALUES (4, "Lara Falk");
 INSERT INTO Spectator(spec_id, name) VALUES (5, "Henrik Bader");
 INSERT INTO Spectator(spec_id, name) VALUES (6, "Ariel Dias");
 INSERT INTO Spectator(spec_id, name) VALUES (7, "Romana Summers");
-INSERT INTO Spectator(spec_id, name) VALUES (8, "Eduard Tollemache");
+INSERT INTO Spectator(spec_id, name) VALUES (8, "Patrick Star");
 INSERT INTO Spectator(spec_id, name) VALUES (9, "Spongebob Squarepants");
 INSERT INTO Spectator(spec_id, name) VALUES (10, "Zuko Ozai");
 INSERT INTO Spectator(spec_id, name) VALUES (11, "Shubham Anna");
+
+--INSERTING TRACKER
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (1, 1, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (2, 2, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (3, 3, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (4, 4, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (5, 5, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (6, 6, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (7, 7, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (8, 8, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (9, 9, '2021-10-22 11:30:00');
+INSERT INTO SpecDriverViewTracker(spec_id, driver_id, timestamp) VALUES (10, 10, '2021-10-22 11:30:00');
+
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (1, 1, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (2, 2, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (3, 3, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (4, 4, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (5, 5, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (6, 6, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (7, 7, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (8, 8, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (9, 9, '2021-10-22 12:30:00');
+INSERT INTO SpecTeamViewTracker(spec_id, employer_id, timestamp) VALUES (10, 10, '2021-10-22 12:30:00');
+
+
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (21,1,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (22,2,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (23,3,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (24,4,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (25,5,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (26,6,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (27,7,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (28,8,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (29,9,'2021-10-22 11:30:00');
+INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) VALUES (30,10,'2021-10-22 11:30:00');
+
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (21,1,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (22,2,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (23,3,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (24,4,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (25,5,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (26,1,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (27,1,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (28,1,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (29,1,'2021-10-22 11:30:00');
+INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) VALUES (30,1,'2021-10-22 11:30:00');
+
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (21,1,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (22,2,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (23,3,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (24,4,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (25,5,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (26,6,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (27,7,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (28,8,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (29,9,'2021-10-22 11:29:00');
+INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) VALUES (30,10,'2021-10-22 11:29:00');
+
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (21,1,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (22,2,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (23,3,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (24,4,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (25,5,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (26,1,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (27,1,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (28,1,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (29,1,'2021-10-22 11:29:00');
+INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (30,1,'2021-10-22 11:29:00');
+
 
 --20 queries
 
@@ -481,13 +573,13 @@ FROM(
     limit 10
     );
 
---#12 Alfa Romeo all hands meeting 1 hour before FP1
+--#12 All hands meeting 1 hour before FP1 for all teams
 INSERT INTO Task(task_id, employer_id, employee_id, description, deadline)
-    SELECT 1, E1.employer_id, employee_id, 'Alfa Romeo All Hands Meeting', '2021-10-22 10:30:00'
-    FROM Employee E1, Employer E2
-    WHERE E1.employer_id = E2.employer_id AND E2.name = 'Alfa Romeo Racing Orlen';
+SELECT row_number() OVER (ORDER BY E1.employer_id ASC), E1.employer_id, employee_id, 'All Hands Meeting', '2021-10-22 10:30:00'
+    FROM Employee E1, Employer E2, Team T
+    WHERE E1.employer_id = E2.employer_id AND E2.employer_id = T.employer_id;    
 
---#13 Print out all tasks Alfa Romeo employee are doing
+--#13 Print out all tasks Alfa Romeo employees are doing
 SELECT E1.name, E2.name, description, deadline
     FROM Employee E1, Employer E2, Task T
     WHERE E1.employer_id = E2.employer_id AND T.employer_id = E2.employer_id AND E2.name = 'Alfa Romeo Racing Orlen';
@@ -533,13 +625,16 @@ UPDATE Driver
 SET gpposition = 'DSQ'
 WHERE name = 'Fernando Alonso';
 
---#18 - Set # of penalties = number of disqualified drivers
+--#18 - Set # of penalties = number of disqualified drivers and DELETE them
 UPDATE Steward
 SET numberofpenalties =
     (SELECT count(*)
     FROM Driver
     WHERE gpposition = 'DSQ'
     );
+
+--DELETE FROM Driver
+--WHERE gpposition = 'DSQ';
 
 --#19 - If both drivers of a team got DSQed, fine them 10 points
 UPDATE Team
@@ -584,3 +679,30 @@ From Team T,
 WHERE T.employer_id = Dr.team_id
 GROUP BY T.employer_id
 ORDER BY points DESC
+
+--#21 Print out the stewards who have given penalties to any of the drivers (based off entries in StewardDriverUpdateTracker)
+SELECT St.name, Dr.name, timestamp
+FROM Steward St, Driver Dr, StewardDriverUpdateTracker Track
+WHERE Track.employee_id = St.employee_id AND Track.driver_id = Dr.driver_id;
+
+--#22 Print out all employees who are working for a company involved in an official race event and their role
+SELECT EvEm.event_id, Ev.name, Employee.name, Em.name, Employee.role
+FROM Event Ev, Employer Em, EventEmployers EvEm, Employee
+WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Employee.employer_id = Em.employer_id AND Ev.name LIKE '%Formula 1%';
+
+--#23 For all employees who are doing so, send them to a debrief 1 hour after the race.
+INSERT INTO Task(task_id, employer_id, employee_id, description, deadline)
+SELECT row_number() OVER (ORDER BY SQ1.employer_id ASC), SQ1.employer_id, SQ1.employee_id, 'Day After Debrief', SQ1.time
+    FROM
+    (SELECT DISTINCT Employee.employee_id, Em.employer_id, SQ2.time AS time
+    FROM Event Ev, Employer Em, EventEmployers EvEm, Employee,
+        (SELECT DATETIME(MAX(time), '+1 hour') AS time  --Get the max time for any officially sanctioned event
+        FROM Event
+        WHERE name LIKE '%Formula 1%')SQ2
+    WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Employee.employer_id = Em.employer_id AND Ev.name LIKE '%Formula 1%') SQ1;
+    
+--#24 Give us all the tasks given to employees involved in an official race event, their name, their employer name, and the time
+SELECT DISTINCT Employee.name, Em.name, T.description, T.deadline
+FROM Task T, Event Ev, Employer Em, EventEmployers EvEm, Employee
+WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Employee.employer_id = Em.employer_id
+    AND Ev.name LIKE '%Formula 1%' AND T.employee_id = Employee.employee_id;
