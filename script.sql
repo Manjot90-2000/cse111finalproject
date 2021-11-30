@@ -714,3 +714,17 @@ SELECT DISTINCT Employee.name, Em.name, T.description, T.deadline
 FROM Task T, Event Ev, Employer Em, EventEmployers EvEm, Employee
 WHERE EvEm.event_id = Ev.event_id AND EvEm.employer_id = Em.employer_id AND Employee.employer_id = Em.employer_id
     AND Ev.name LIKE '%Formula 1%' AND T.employee_id = Employee.employee_id;
+
+--#25 Give us all the data regarding the driver (view driver statistics)
+SELECT Dr.name, Team.name, Dr.wins, Dr.points, Dr.overallstanding, Dr.gpposition, Dr.fastestlap
+FROM Driver Dr, Team
+WHERE Dr.driver_id = 1 AND Dr.team_id = Team.employer_id;
+
+SELECT *
+FROM Driver;
+
+--Testing insert
+INSERT INTO Task(task_id, employer_id, employee_id, description, deadline)
+    SELECT 21, employer.employer_id, employee_id, 'Im not sure', '2021-10-24 16:00:00'
+    FROM employee, employer
+    WHERE employee.employer_id = employer.employer_id AND employer.employer_id = 12;
