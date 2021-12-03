@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS StewardDriverViewTracker;
 DROP TABLE IF EXISTS SpecTeamViewTracker;
 DROP TABLE IF EXISTS StewardTeamUpdateTracker;
 DROP TABLE IF EXISTS StewardTeamViewTracker;
+DROP TABLE IF EXISTS SpectatorEvents;
 
 
 CREATE TABLE Spectator (
@@ -90,8 +91,8 @@ CREATE TABLE Driver(
 CREATE TABLE EventEmployers(
     event_id INTEGER,
     employer_id INTEGER,
-    FOREIGN KEY (event_id) REFERENCES event(event_id),
-    FOREIGN KEY (employer_id) REFERENCES event(employer_id),
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES Employer(employer_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT PK PRIMARY KEY (event_id, employer_id)
 );
 
@@ -164,8 +165,8 @@ CREATE TABLE StewardTeamViewTracker (
 CREATE TABLE SpectatorEvents (
     spec_id INTEGER,
     event_id INTEGER,
-    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id),
-    FOREIGN KEY (event_id) REFERENCES Event(event_id),
+    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES Event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT PK PRIMARY KEY (spec_id, event_id)
 );
 
@@ -555,30 +556,29 @@ ORDER BY CAST(gpposition AS INTEGER)
 limit 10;
 
 --#11 Print out the top 10 + points, fastest lap included
-SELECT driver_id, name,
+SELECT drname, teamname, gpposition,
     CASE fastestlap = 1
         WHEN true then points + 1
         else points
-    END AS points, TotalPoints
+    END AS points
 FROM(
-    SELECT driver_id, name, 
+    SELECT driver_id, Driver.name as drname, Team.name as teamname,
         CASE
-            when gpposition = 1 then 25
-            when gpposition = 2 then 18
-            when gpposition = 3 then 15
-            when gpposition = 4 then 12
-            when gpposition = 5 then 10
-            when gpposition = 6 then 8
-            when gpposition = 7 then 6
-            when gpposition = 8 then 4
-            when gpposition = 9 then 2
-            when gpposition = 10 then 1
-        END as points
-        ,points AS TotalPoints, fastestlap
-    From Driver
-    WHERE CAST(gpposition AS INTEGER) IS gpposition
-    ORDER BY CAST(gpposition AS INTEGER)
-    limit 10
+            when gpposition = '1' then 25
+            when gpposition = '2' then 18
+            when gpposition = '3' then 15
+            when gpposition = '4' then 12
+            when gpposition = '5' then 10
+            when gpposition = '6' then 8
+            when gpposition = '7' then 6
+            when gpposition = '8' then 4
+            when gpposition = '9' then 2
+            when gpposition = '10' then 1
+            else 0 
+        END as points, fastestlap, gpposition
+    From Driver, Team
+    WHERE Driver.team_id = Team.employer_id
+    ORDER BY points desc, gpposition asc
     );
 
 --#12 All hands meeting 1 hour before FP1 for all teams
@@ -723,8 +723,38 @@ WHERE Dr.driver_id = 1 AND Dr.team_id = Team.employer_id;
 SELECT *
 FROM Driver;
 
+--INSERT More tuples
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (31, 1, "John Doe", "someone");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --Testing insert
 INSERT INTO Task(task_id, employer_id, employee_id, description, deadline)
     SELECT 21, employer.employer_id, employee_id, 'Im not sure', '2021-10-24 16:00:00'
     FROM employee, employer
     WHERE employee.employer_id = employer.employer_id AND employer.employer_id = 12;
+
+DELETE FROM EventEmployers where event_id = 12;
+
+DELETE FROM Event WHERE event_id =
+    (SELECT event_id
+    FROM EventEmployers
+    WHERE event_id = ? AND employer_id = ?;
+    )
