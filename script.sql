@@ -1091,3 +1091,7 @@ INSERT Into EventEmployers(event_id, employer_id)
 SELECT Event.event_id, Employer.employer_id
 FROM Event, Employer
 WHERE employer_id = 22;
+
+SELECT Dr.name, Team.name, Dr.wins, Dr.points, Dr.overallstanding, Dr.gpposition, Dr.fastestlap
+FROM Driver Dr, Team
+WHERE Dr.team_id = Team.employer_id AND Team.employer_id = 1;

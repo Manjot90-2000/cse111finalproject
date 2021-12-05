@@ -337,6 +337,42 @@ public class phase3 {
         }
     }
 
+    private void viewDriverPairStatistics(String _team_name) {
+        System.out.printf("%-30s %-35s %-5s %-7s %-17s %-12s %-12s\n",
+                "Driver Name", "Team Name", "Wins", "Points", "Overall Standing", "GP Position", "Fastest Lap");
+        try {
+            String viewDriver = "SELECT Dr.name, Team.name, Dr.wins, Dr.points, Dr.overallstanding, Dr.gpposition, Dr.fastestlap "
+                    +
+                    "FROM Driver Dr, Team " +
+                    "WHERE Dr.team_id = Team.employer_id AND Team.name = ?; ";
+            PreparedStatement view = c.prepareStatement(viewDriver);
+            view.setString(1, _team_name);
+            ResultSet driver = view.executeQuery();
+
+            while (driver.next()) {
+                String drivername = driver.getString(1);
+                String teamname = driver.getString(2);
+                int wins = driver.getInt(3);
+                double points = driver.getDouble(4);
+                int overallstanding = driver.getInt(5);
+                String gpposition = driver.getString(6);
+                int fastestlap = driver.getInt(7);
+                System.out.printf("%-30s %-35s %-5d %-7.1f %-17d %-12s %-12d\n", drivername, teamname, wins, points,
+                        overallstanding, gpposition, fastestlap);
+            }
+
+            view.close();
+            driver.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
     private void viewTeamStatistics(String _team_name) {
         System.out.printf("%-35s %-5s %-7s %-17s\n",
                 "Team Name", "Wins", "Points", "Overall Standing");
@@ -1124,6 +1160,46 @@ public class phase3 {
         }
     }
 
+    private void updateDriverStatisticsPosition(int _driver_id, int position) {
+        try {
+            String update = "UPDATE Driver SET overallstanding = ? WHERE driver_id = ?";
+            PreparedStatement updateDriver = c.prepareStatement(update);
+            updateDriver.setInt(1, position);
+            updateDriver.setInt(2, _driver_id);
+            updateDriver.executeUpdate();
+
+            c.commit();
+            updateDriver.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void updateTeamStatisticsPosition(int _team_id, int position) {
+        try {
+            String update = "UPDATE Team SET overallstanding = ? WHERE employer_id = ?";
+            PreparedStatement updateTeam = c.prepareStatement(update);
+            updateTeam.setInt(1, position);
+            updateTeam.setInt(2, _team_id);
+            updateTeam.executeUpdate();
+
+            c.commit();
+            updateTeam.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
     private void insertStewardDriverUpdateTracker(int _steward_id, int _driver_id) {
         try {
             String insertSTEWARDDVT = "INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) " +
@@ -1354,7 +1430,6 @@ public class phase3 {
                     } else {
                         System.out.println("Improper operation");
                     }
-
                     break;
 
                 case "employer":
@@ -1462,7 +1537,8 @@ public class phase3 {
                         System.out.println(
                                 "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
                                         +
-                                        "4. View employees\n 5. Access driver results\n 6. Access team results\n 7. Access weekend results (Enter 1-7)");
+                                        "4. View employees\n 5. Access driver results\n 6. Access team results\n 7. Access weekend results\n " +
+                                        "8. View your team's standings\n 9. View your drivers' standings\n(Enter 1-9)");
                         input2 = Integer.parseInt(scan.nextLine());
                         if (input2 == 1) {
                             System.out.println("Describe the task.");
@@ -1512,7 +1588,14 @@ public class phase3 {
                         } else if (input2 == 7) {
                             System.out.println("Viewing weekend results");
                             dbconnection.viewWeekendResults(0, input);
-                        } else {
+                        } else if (input2 == 8) {
+                            System.out.println("Viewing your team's statistics");
+                            dbconnection.viewTeamStatistics(nameofteam);
+                        } else if (input2 == 9) {
+                            System.out.println("Viewing your drivers' statistics");
+                            dbconnection.viewDriverPairStatistics(nameofteam);
+                        } 
+                        else {
                             System.out.println("Improper operation");
                         }
 
@@ -1548,6 +1631,9 @@ public class phase3 {
                     else if (input2 == 4) {
                         System.out.println("Viewing weekend results");
                         dbconnection.viewWeekendResults(0, input);
+                    } else{
+                        System.out.println("Invalid operation");
+                        break;
                     }
                     break;
                 case "st":
@@ -1557,7 +1643,8 @@ public class phase3 {
                     System.out.println(
                             "What do you want to do?\n 1. View Tasks \n 2. Access driver results\n 3. Access team results\n "
                                     +
-                                    "4. Access weekend results\n 5. View specific driver results\n 6. View specific team results\n 7. Update race results");
+                                    "4. Access weekend results\n 5. View specific driver results\n 6. View specific team results\n " +
+                                    "7. Update points\n 8. Update finishing position\n(Enter 1-8)");
                     input2 = Integer.parseInt(scan.nextLine());
                     // employeeid = dbconnection.getEmployeeID(nameofsteward, input);
                     if (employeeid > -1) {
@@ -1673,6 +1760,65 @@ public class phase3 {
                                 }
                             }
                         }
+                        else if (input2 == 8) {
+                            System.out.println(
+                                    "Do you want to update overall standings from a specific driver, or a specific team? (0 = driver, 1 = team)");
+                            int input3 = Integer.parseInt(scan.nextLine());
+                            if (input3 == 0) {
+                                dbconnection.viewDriverNames();
+                                System.out.println(
+                                        "Which driver would you like to update?");
+                                String drivername = String.valueOf(scan.nextLine());
+                                int driverid = dbconnection.getDriverID(drivername);
+
+                                if (driverid > -1) {
+                                    dbconnection.viewDriverStatistics(drivername);
+                                    dbconnection.insertStewardDriverViewTracker(employeeid, driverid);
+                                    System.out.println("What is their new overall position?");
+                                    int position = Integer.parseInt(scan.nextLine());
+
+                                    dbconnection.updateDriverStatisticsPosition(driverid, position);
+                                    int teamId = dbconnection.getTeamIDFromDriver(driverid);
+                                    dbconnection.insertStewardDriverUpdateTracker(employeeid, driverid);
+
+                                    System.out.println("");
+
+                                    String teamName = dbconnection.getTeamName(teamId);
+                                    dbconnection.viewDriverStatistics(drivername);
+                                } else {
+                                    System.out.println("Invalid driver name");
+                                    break;
+                                }
+                            } else if (input3 == 1) {
+                                dbconnection.viewTeamNames();
+                                System.out.println(
+                                        "Which team would you like to update?");
+                                String teamname = String.valueOf(scan.nextLine());
+                                int teamId = dbconnection.getTeamID(teamname);
+
+                                if (teamId > -1) {
+                                    dbconnection.viewTeamStatistics(teamname);
+                                    dbconnection.insertStewardTeamViewTracker(employeeid, teamId);
+                                    System.out.println(
+                                            "What is their new overall position?");
+                                    int position = Integer.parseInt(scan.nextLine());
+
+                                    dbconnection.updateTeamStatisticsPosition(teamId, position);
+                                    dbconnection.insertStewardTeamUpdateTracker(employeeid, teamId);
+
+                                    System.out.println("");
+
+                                    String teamName = dbconnection.getTeamName(teamId);
+                                    dbconnection.viewTeamStatistics(teamName);
+                                } else {
+                                    System.out.println("Invalid team name");
+                                    break;
+                                }
+                            }
+                        } else{
+                            System.out.println("Improper operation");
+                            break;
+                        }
                     } else {
                         System.out.println("Invalid steward (wrong name)");
                         break;
@@ -1709,7 +1855,10 @@ public class phase3 {
                         System.out.println("Viewing weekend results");
                         dbconnection.viewWeekendResults(0, input);
                     }
-                    break;
+                    else{
+                        System.out.println("Invalid operation");
+                        break;
+                    }
                 case "STOP":
                     System.out.println("Stopping");
                     break;
