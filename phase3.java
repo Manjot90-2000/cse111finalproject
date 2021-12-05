@@ -447,6 +447,31 @@ public class phase3 {
         return -1;
     }
 
+    private int getEmployerIDNoF1Teams(String _name) {
+        try {
+            String getID = "SELECT employer_id " +
+                    "FROM employer " +
+                    "WHERE name = ? ANd role <> 'f1team'; ";
+            PreparedStatement fetch = c.prepareStatement(getID);
+            fetch.setString(1, _name);
+            ResultSet id = fetch.executeQuery();
+            int idvalue = id.getInt(1);
+
+            fetch.close();
+            id.close();
+            return idvalue;
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+        return -1;
+    }
+
+
     private void createTaskAll(int _employer_id, String _description, String _deadline) {
         try {
             String maxTaskQ = "SELECT MAX(task_id) FROM Task WHERE employer_id = ?; ";
@@ -1208,7 +1233,7 @@ public class phase3 {
         System.out.printf("%-50s\n", "Name");
         try {
             String viewEmployerNames = "SELECT name " +
-                    "FROM Employer; ";
+                    "FROM Employer WHERE role <> 'f1team'; ";
             PreparedStatement view = c.prepareStatement(viewEmployerNames);
             ResultSet EmplNameList = view.executeQuery();
 
@@ -1337,15 +1362,15 @@ public class phase3 {
                     System.out.println("What employer are you representing? (insert name, case sensitive)");
                     String nameofemployer = String.valueOf(scan.nextLine());
 
-                    int employerid = dbconnection.getEmployerID(nameofemployer);
+                    int employerid = dbconnection.getEmployerIDNoF1Teams(nameofemployer);
                     if (employerid < 0) {
                         System.out.println("Invalid employer");
                     } else {
                         System.out.println(
                                 "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
                                         +
-                                        "4. Creating an event\n 5. View and Delete an Event\n 6. Assign yourself to an event\n " +
-                                        "7. View Event Popularity\n(Enter 1-7)");
+                                        "4. Viewing employees\n 5. Creating an event\n 6. View and Delete an Event\n " +
+                                        "7. Assign yourself to an event\n 8. View Event Popularity\n(Enter 1-8)");
                         input2 = Integer.parseInt(scan.nextLine());
                         if (input2 == 1) {
                             System.out.println("Describe the task.");
@@ -1385,6 +1410,9 @@ public class phase3 {
                             System.out.println("Assigning task: ");
                             dbconnection.viewTasks(employerid);
                         } else if (input2 == 4) {
+                            System.out.println("Viewing employees");
+                            dbconnection.viewEmployees(employerid);
+                        } else if (input2 == 5) {
                             System.out.println("What is the name of the event?");
                             String name = String.valueOf(scan.nextLine());
 
@@ -1396,7 +1424,7 @@ public class phase3 {
                             String time = String.valueOf(scan.nextLine());
                             dbconnection.createEvent(employerid, name, location, time);
                             dbconnection.viewEventFromEmployer(employerid);
-                        } else if (input2 == 5) {
+                        } else if (input2 == 6) {
                             dbconnection.viewEventFromEmployer(employerid);
                             System.out.println("Which event would you like to delete? (Event ID)");
                             int specificevent = Integer.parseInt(scan.nextLine());
@@ -1404,14 +1432,14 @@ public class phase3 {
                             dbconnection.deleteEvent(employerid, specificevent);
                             System.out.println("Deleting event");
                             dbconnection.viewEventFromEmployer(employerid);
-                        } else if (input2 == 6) {
+                        } else if (input2 == 7) {
                             dbconnection.viewEvents();
                             System.out.println("Which event would you like to register for? (Event ID) ");
                             int specificevent = Integer.parseInt(scan.nextLine());
                             dbconnection.assignEvent(employerid, specificevent);
                             System.out.println("Assigning event");
                             dbconnection.viewEventFromEmployer(employerid);
-                        } else if (input2 == 7){
+                        } else if (input2 == 8){
                             System.out.println("Viewing event popularity");
                             dbconnection.viewEventsPopularity(employerid);
                         }
@@ -1434,7 +1462,7 @@ public class phase3 {
                         System.out.println(
                                 "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
                                         +
-                                        "4. Access driver results\n 5. Access team results\n 6. Access weekend results (Enter 1-6)");
+                                        "4. View employees\n 5. Access driver results\n 6. Access team results\n 7. Access weekend results (Enter 1-7)");
                         input2 = Integer.parseInt(scan.nextLine());
                         if (input2 == 1) {
                             System.out.println("Describe the task.");
@@ -1473,12 +1501,15 @@ public class phase3 {
                             System.out.println("Assigning task: ");
                             dbconnection.viewTasks(teamid);
                         } else if (input2 == 4) {
+                            System.out.println("Viewing employees");
+                            dbconnection.viewEmployees(teamid);
+                        } else if (input2 == 5) {
                             System.out.println("Viewing driver standings");
                             dbconnection.viewDriverStandings();
-                        } else if (input2 == 5) {
+                        } else if (input2 == 6) {
                             System.out.println("Viewing team standings");
                             dbconnection.viewTeamStandings();
-                        } else if (input2 == 6) {
+                        } else if (input2 == 7) {
                             System.out.println("Viewing weekend results");
                             dbconnection.viewWeekendResults(0, input);
                         } else {
