@@ -1,4 +1,4 @@
-
+PRAGMA foreign_keys = ON;
 --Drop all tables in our our database
 DROP TABLE IF EXISTS Spectator;
 DROP TABLE IF EXISTS Event;
@@ -42,7 +42,7 @@ CREATE TABLE Employee(
     employer_id INTEGER,
     name VARCHAR(30),
     role VARCHAR(30),
-    FOREIGN KEY (employer_id) REFERENCES employer(employer_id)
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE Steward (
@@ -51,8 +51,8 @@ CREATE TABLE Steward (
     name VARCHAR(30),
     role VARCHAR(30),
     numberofpenalties INTEGER,
-    FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-    FOREIGN KEY (employer_id) REFERENCES employer(employer_id)
+    FOREIGN KEY (employee_id) REFERENCES employee(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE Marshal (
@@ -61,8 +61,8 @@ CREATE TABLE Marshal (
     name VARCHAR(30),
     role VARCHAR(30),
     tracklocation VARCHAR(10),
-    FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-    FOREIGN KEY (employer_id) REFERENCES employer(employer_id)
+    FOREIGN KEY (employee_id) REFERENCES employee(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE Team (
@@ -72,7 +72,7 @@ CREATE TABLE Team (
     wins INTEGER,
     points FLOAT,
     overallstanding INTEGER,
-    FOREIGN KEY (employer_id) REFERENCES employer(employer_id)
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE Driver(
@@ -84,7 +84,7 @@ CREATE TABLE Driver(
     overallstanding INTEGER,
     gpposition VARCHAR(3),
     fastestlap INTEGER,
-    FOREIGN KEY (team_id) REFERENCES team(employer_id)
+    FOREIGN KEY (team_id) REFERENCES team(employer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 
@@ -102,8 +102,8 @@ CREATE TABLE Task (
     employee_id INTEGER,
     description VARCHAR(30),
     deadline DATETIME,
-    FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-    FOREIGN KEY (employer_id) REFERENCES employer(employer_id),
+    FOREIGN KEY (employee_id) REFERENCES employee(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES employer(employer_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, task_id)
 );
 
@@ -111,17 +111,26 @@ CREATE TABLE SpecDriverViewTracker (
     spec_id INTEGER,
     driver_id INTEGER,
     timestamp DATETIME,
-    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id),
-    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
+    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (spec_id, driver_id, timestamp)
+);
+
+CREATE TABLE SpecTeamViewTracker (
+    spec_id INTEGER ,
+    employer_id INTEGER,
+    timestamp DATETIME,
+    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES Team(employer_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT PK PRIMARY KEY (spec_id, employer_id, timestamp)
 );
 
 CREATE TABLE StewardDriverUpdateTracker (
     employee_id INTEGER,
     driver_id INTEGER,
     timestamp DATETIME,
-    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
-    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
+    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (employee_id, driver_id, timestamp)
 );
 
@@ -129,26 +138,17 @@ CREATE TABLE StewardDriverViewTracker (
     employee_id INTEGER,
     driver_id INTEGER,
     timestamp DATETIME,
-    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
-    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id),
+    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES Driver(driver_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (employee_id, driver_id, timestamp)
-);
-
-CREATE TABLE SpecTeamViewTracker (
-    spec_id INTEGER ,
-    employer_id INTEGER,
-    timestamp DATETIME,
-    FOREIGN KEY (spec_id) REFERENCES Spectator(spec_id),
-    FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
-    CONSTRAINT PK PRIMARY KEY (spec_id, employer_id, timestamp)
 );
 
 CREATE TABLE StewardTeamUpdateTracker (
     employee_id INTEGER,
     employer_id INTEGER,
     timestamp DATETIME,
-    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id),
-    FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
+    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES Team(employer_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, timestamp)
 );
 
@@ -156,8 +156,8 @@ CREATE TABLE StewardTeamViewTracker (
     employee_id INTEGER,
     employer_id INTEGER,
     timestamp DATETIME,
-    FOREIGN KEY (employer_id) REFERENCES Team(employer_id),
-    FOREIGN KEY (employee_id) REFERENCES Team(employee_id),
+    FOREIGN KEY (employee_id) REFERENCES Steward(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (employer_id) REFERENCES Team(employer_id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT PK PRIMARY KEY (employee_id, employer_id, timestamp)
 );
 
@@ -184,6 +184,31 @@ INSERT INTO Employer(employer_id, name, role) VALUES (10, 'Williams Racing', 'f1
 INSERT INTO Employer(employer_id, name, role) VALUES (11, "Federation Internationale de l'Automobile", 'organizingbody');
 INSERT INTO Employer(employer_id, name, role) VALUES (12, 'Circuit of the Americas LLC', 'trackside');
 INSERT INTO Employer(employer_id, name, role) VALUES (13, 'COTA Concerts', 'concerts');
+--adding 15 nonteam employer
+INSERT INTO Employer(employer_id, name, role) VALUES (14, 'Grey Hound', 'transportation');
+INSERT INTO Employer(employer_id, name, role) VALUES (15, 'Carls Jr', 'food');
+INSERT INTO Employer(employer_id, name, role) VALUES (16, 'Dennys', 'food');
+INSERT INTO Employer(employer_id, name, role) VALUES (17, 'Five Star Resturant', 'food');
+INSERT INTO Employer(employer_id, name, role) VALUES (18, 'Chuck E Cheese', 'minigames');
+INSERT INTO Employer(employer_id, name, role) VALUES (19, 'Merch Store', 'merchandise');
+INSERT INTO Employer(employer_id, name, role) VALUES (20, 'Tidy', 'cleaning');
+INSERT INTO Employer(employer_id, name, role) VALUES (21, 'G4S', 'security');
+INSERT INTO Employer(employer_id, name, role) VALUES (22, 'Austin Police Department', 'lawenforcement');
+INSERT INTO Employer(employer_id, name, role) VALUES (23, 'Austin EMT', 'medical');
+INSERT INTO Employer(employer_id, name, role) VALUES (24, 'Accessibility LLC', 'accessibility');
+INSERT INTO Employer(employer_id, name, role) VALUES (25, 'Austin Shuttle Service', 'transportation');
+INSERT INTO Employer(employer_id, name, role) VALUES (26, 'Stadium Vendors Inc.', 'merchandise');
+INSERT INTO Employer(employer_id, name, role) VALUES (27, 'Texstar Networking', 'networks');
+INSERT INTO Employer(employer_id, name, role) VALUES (28, 'Texas Marketing Solutions', 'advertisement');
+
+
+
+
+
+--DELETE
+--FROM Driver;
+--DELETE
+--From Team;
 
 --INSERTING TEAMS
 INSERT INTO Team(employer_id, name, role, wins, points, overallstanding) VALUES (1, 'Alfa Romeo Racing Orlen', 'f1team', 0, 0, 0);
@@ -232,6 +257,66 @@ INSERT INTO Event(event_id, name, location, time) VALUES (8, 'Austin Polka Band'
 INSERT INTO Event(event_id, name, location, time) VALUES (9, 'Major League Eating Contest', 'ONEDERLAND', '2021-10-23 18:30:00');
 INSERT INTO Event(event_id, name, location, time) VALUES (10, 'Daniel Ricciardo NASCAR DEMO', 'COTA Track', '2021-10-24 8:50:00');
 
+INSERT INTO Event(event_id, name, location, time) VALUES (11, 'The Motts', 'Fan Zone', '2021-10-22 13:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (12, 'DJ AQ', 'LA CANTINA (T6)', '2021-10-22 13:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (13, 'Jess Daniel', 'LONESTAR LAND (T16)', '2021-10-22 14:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (14, 'DJ AQ', 'LA CANTINA (T6)', '2021-10-22 14:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (15, 'Shooks', 'Fan Zone', '2021-10-22 14:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (16, 'Croy & The Boys', 'LONESTAR LAND (T16)', '2021-10-22 17:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (17, 'Feliz', 'LA CANTINA (T6)', '2021-10-22 17:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (18, 'Lucha Libre', 'LA CANTINA (T6)', '2021-10-23 11:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (19, 'Zackery Taylor', 'LONESTAR LAND (T6)', '2021-10-23 12:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (20, 'Pat G', 'Fan Zone', '2021-10-23 12:05:00');
+
+INSERT INTO Event(event_id, name, location, time) VALUES (21, 'El Tule', 'Fan Zone', '2021-10-23 12:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (22, 'DJ Chorizo Funk', 'RODEO DRIVEWAY (MGS)', '2021-10-23 13:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (23, 'Austin Polka Band', 'BIERGARTEN (T2)', '2021-10-23 14:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (24, 'Nina Diaz', 'Fan Zone', '2021-10-23 14:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (25, 'Rattlesnake Milk', 'LONESTAR LAND (T16)', '2021-10-23 14:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (26, 'DJ Chorizo Funk', 'RODEO DRIVEWAY (MGS)', '2021-10-23 14:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (27, 'Lucha Libre', 'LA CANTINA (T6)', '2021-10-23 14:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (28, 'Austin Polka Band', 'BIERGARTEN (T2)', '2021-10-23 15:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (29, 'The Districts', 'Fan Zone', '2021-10-23 15:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (30, 'Mayeux & Broussard', 'LONESTAR LAND (T16)', '2021-10-23 15:05:00');
+
+INSERT INTO Event(event_id, name, location, time) VALUES (31, 'Serumn', 'LA CANTINA (T6)', '2021-10-23 15:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (32, 'Neil Diamond (Tribute)', 'RODEO DRIVEWAY (MGS)', '2021-10-23 15:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (33, 'Magnifico', 'Fan Zone', '2021-10-23 17:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (34, 'Garret T. Capps', 'LA CANTINA (T6)', '2021-10-23 17:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (35, 'Bidi Bidi Banda', 'LA CANTINA (T6)', '2021-10-23 17:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (36, 'Spamorama', 'ONEDERLAND', '2021-10-23 17:35:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (37, 'Major League Eating Contest', 'ONEDERLAND', '2021-10-23 18:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (38, 'Money Chicha', 'LA CANTINA (T6)', '2021-10-24 11:30:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (39, 'Austin Polka Band', 'BIERGARTEN (T2)', '2021-10-24 13:30:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (40, 'Mobley', 'Fan Zone', '2021-10-24 13:00:00');
+
+INSERT INTO Event(event_id, name, location, time) VALUES (41, 'Rob Baird', 'LONESTAR LAND (T16)', '2021-10-24 13:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (42, 'Elvis (Tribute)', 'RODEO DRIVEWAY (MGS)', '2021-10-24 13:00:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (43, 'Joshua Ray Walker', 'LONESTAR LAND (T16)', '2021-10-24 16:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (44, 'Metalachi', 'LA CANTINA (T6)', '2021-10-24 16:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (45, 'Neil Diamond (Tribute)', 'BIERGARTEN (T2)', '2021-10-24 16:05:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (46, 'Diesel', 'ONEDERLAND', '2021-10-24 17:30:00');
+INSERT INTO Event(event_id, name, location, time) VALUES (47, 'Kool & The Gang', 'GERMANIA INSURANCE AMPHITHEATER', '2021-10-24 16:30:00');
+
+-- INSERT INTO Employer(employer_id, name, role) VALUES (14, 'Grey Hound', 'transportation');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (15, 'Carls Jr', 'food');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (16, 'Dennys', 'food');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (17, 'Five Star Resturant', 'food');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (18, 'Chuck E Cheese', 'minigames');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (19, 'Merch Store', 'merchandise');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (20, 'Tidy', 'cleaning');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (21, 'G4S', 'security');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (22, 'Austin Police Department', 'lawenforcement');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (23, 'Austin EMT', 'medical');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (24, 'Accessibility LLC', 'accessibility');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (25, 'Austin Shuttle Service', 'transportation');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (26, 'Stadium Vendors Inc.', 'merchandise');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (27, 'Texstar Networking', 'networks');
+-- INSERT INTO Employer(employer_id, name, role) VALUES (28, 'Texas Marketing Solutions', 'advertisement');
+
+
+
+
 --INSERTING EMPLOYEES (for now just the principals)
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (1, 1, "Frederic Vasseur", "Principal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (2, 2, "Franz Tost", "Principal");
@@ -244,6 +329,10 @@ INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (8, 8, "Toto W
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (9, 9, "Christian Horner", "Principal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (10, 10,"Jost Capito", "Principal");
 
+-- adding 100 tuples into employee
+
+
+
 --INSERTING MARSHALS into MARSHALS AND EMPLOYEES
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (11, 12, "Micheal Carter","Marshal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (12, 12, "Santiago Holloway","Marshal");
@@ -255,6 +344,111 @@ INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (17, 12, "Ryde
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (18, 12, "Phoebe Ayers", "Marshal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (19, 12, "Emily Hathway","Marshal");
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (20, 12, "Sandra Saunders", "Marshal");
+-- adding 100 tuples into employee
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (31, 12, "Conrad Edwards", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (32, 12, "Emmanuel Hess", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (33, 12, "Jaylynn Singh", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (34, 12, "Benjamin Benton", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (35, 12, "Melvin Marks", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (36, 12, "Greyson Savage", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (37, 12, "Jaliyah Howard", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (38, 12, "Dixie Cherry", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (39, 12, "Giovanni Riddle","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (40, 12, "Silas Griffin", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (41, 12, "Neveah Lawrence", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (42, 12, "Donavan Silva", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (43, 12, "Maddox Ellis", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (44, 12, "Fabian Hogan", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (45, 12, "Roderick Arnold", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (46, 12, "Aiden Zhang", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (47, 12, "Zachariah Kennedy", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (48, 12, "Agustin Graves", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (49, 12, "Stacy Middleton","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (50, 12, "Alani Macdonald", "Marshal");
+
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (51, 12, "Denise Wade", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (52, 12, "Stephany Huerta", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (53, 12, "Ashly Reid", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (54, 12, "Jovan Walls", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (55, 12, "Briley Carroll", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (56, 12, "Sidney Cohen", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (57, 12, "Zain Pennington", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (58, 12, "Elaine Park", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (59, 12, "Denise Griffin","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (60, 12, "Brycen Hood", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (61, 12, "Daniella Hamilton", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (62, 12, "Addisyn Martinez", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (63, 12, "Natasha Wheeler", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (64, 12, "Marvin Oneal", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (65, 12, "Ella Zamora", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (66, 12, "Damari Beard", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (67, 12, "Chad Wu", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (68, 12, "Diamond Peterson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (69, 12, "Jacquelyn Houston","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (70, 12, "Moriah Hinton", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (71, 12, "Elsa Archer", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (72, 12, "Janiya MoonAd", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (73, 12, "Ada Wise", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (74, 12, "Marina Mclean", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (75, 12, "Roy Sanders", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (76, 12, "Fatima Morrison", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (77, 12, "William Wolf", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (78, 12, "Amari Ritter", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (79, 12, "Darwin Schmidt","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (80, 12, "Aidan Ramsey", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (81, 12, "Jaiden Conley", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (82, 12, "Tessa Perkins", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (83, 12, "Rogelio Sampson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (84, 12, "Case Atkins", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (85, 12, "Alberto Gregory", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (86, 12, "Elian Farley", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (87, 12, "Emmett Hinton", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (88, 12, "Chaim Mcbride", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (89, 12, "Roy Monroe","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (90, 12, "Cash Hendricks", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (91, 12, "Talan Gutierrez", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (92, 12, "Fisher Sharp", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (93, 12, "Raphael Acosta", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (94, 12, "Jazlene Estrada", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (95, 12, "Bronson Mack", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (96, 12, "Sherlyn Meyer", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (97, 12, "Emma Erickson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (98, 12, "Jared Doyle", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (99, 12, "Marlie Strong","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (100, 12, "Jazmin Horn", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (101, 12, "Kash Parson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (102, 12, "Megan Rubio", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (103, 12, "Maliyah Hinton", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (104, 12, "Amaris Gardner", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (105, 12, "Holly Donaldson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (106, 12, "Charlie Davenport", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (107, 12, "Amira Rangel", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (108, 12, "Edward Rivera", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (109, 12, "Roman Pennington","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (110, 12, "Rubi Waters", "Marshal");
+
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (111, 12, "Parker Johns", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (112, 12, "Dakota Bowen", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (113, 12, "Jayvon Arroyo", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (114, 12, "Chloe Reese", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (115, 12, "Armani Golden", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (116, 12, "Angeline Cisneros", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (117, 12, "Dean Mathis", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (118, 12, "Gabriel Robinson", "Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (119, 12, "Brennen Whitehead","Marshal");
+INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (120, 12, "Juliet Hester", "Marshal");
+
+
+--end employee
+
 
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (11, 12, "Micheal Carter", "Marshal", "Pitlane");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (12, 12, "Santiago Holloway", "Marshal", "T10");
@@ -266,6 +460,108 @@ INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES 
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (18, 12, "Phoebe Ayers", "Marshal", "T7");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (19, 12, "Emily Hathway","Marshal", "Pitlane");
 INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (20, 12, "Sandra Saunders", "Marshal", "T11");
+
+-- adding 100 tuples into marshal
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (31, 12, "Conrad Edwards", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (32, 12, "Emmanuel Hess", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (33, 12, "Jaylynn Singh", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (34, 12, "Benjamin Benton", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (35, 12, "Melvin Marks", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (36, 12, "Greyson Savage", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (37, 12, "Jaliyah Howard", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (38, 12, "Dixie Cherry", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (39, 12, "Giovanni Riddle","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (40, 12, "Silas Griffin", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (41, 12, "Neveah Lawrence", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (42, 12, "Donavan Silva", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (43, 12, "Maddox Ellis", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (44, 12, "Fabian Hogan", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (45, 12, "Roderick Arnold", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (46, 12, "Aiden Zhang", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (47, 12, "Zachariah Kennedy", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (48, 12, "Agustin Graves", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (49, 12, "Stacy Middleton","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (50, 12, "Alani Macdonald", "Marshal", "T11");
+
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (51, 12, "Denise Wade", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (52, 12, "Stephany Huerta", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (53, 12, "Ashly Reid", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (54, 12, "Jovan Walls", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (55, 12, "Briley Carroll", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (56, 12, "Sidney Cohen", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (57, 12, "Zain Pennington", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (58, 12, "Elaine Park", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (59, 12, "Denise Griffin","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (60, 12, "Brycen Hood", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (61, 12, "Daniella Hamilton", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (62, 12, "Addisyn Martinez", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (63, 12, "Natasha Wheeler", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (64, 12, "Marvin Oneal", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (65, 12, "Ella Zamora", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (66, 12, "Damari Beard", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (67, 12, "Chad Wu", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (68, 12, "Diamond Peterson", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (69, 12, "Jacquelyn Houston","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (70, 12, "Moriah Hinton", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (71, 12, "Elsa Archer", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (72, 12, "Janiya MoonAd", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (73, 12, "Ada Wise", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (74, 12, "Marina Mclean", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (75, 12, "Roy Sanders", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (76, 12, "Fatima Morrison", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (77, 12, "William Wolf", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (78, 12, "Amari Ritter", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (79, 12, "Darwin Schmidt","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (80, 12, "Aidan Ramsey", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (81, 12, "Jaiden Conley", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (82, 12, "Tessa Perkins", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (83, 12, "Rogelio Sampson", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (84, 12, "Case Atkins", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (85, 12, "Alberto Gregory", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (86, 12, "Elian Farley", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (87, 12, "Emmett Hinton", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (88, 12, "Chaim Mcbride", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (89, 12, "Roy Monroe","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (90, 12, "Cash Hendricks", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (91, 12, "Talan Gutierrez", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (92, 12, "Fisher Sharp", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (93, 12, "Raphael Acosta", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (94, 12, "Jazlene Estrada", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (95, 12, "Bronson Mack", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (96, 12, "Sherlyn Meyer", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (97, 12, "Emma Erickson", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (98, 12, "Jared Doyle", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (99, 12, "Marlie Strong","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (100, 12, "Jazmin Horn", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (101, 12, "Kash Parson", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (102, 12, "Megan Rubio", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (103, 12, "Maliyah Hinton", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (104, 12, "Amaris Gardner", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (105, 12, "Holly Donaldson", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (106, 12, "Charlie Davenport", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (107, 12, "Amira Rangel", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (108, 12, "Edward Rivera", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (109, 12, "Roman Pennington","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (110, 12, "Rubi Waters", "Marshal", "T11");
+
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (111, 12, "Parker Johns", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (112, 12, "Dakota Bowen", "Marshal", "T10");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (113, 12, "Jayvon Arroyo", "Marshal", "T3");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (114, 12, "Chloe Reese", "Marshal", "T1");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (115, 12, "Armani Golden", "Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (116, 12, "Angeline Cisneros", "Marshal", "T5");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (117, 12, "Dean Mathis", "Marshal", "T2");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (118, 12, "Gabriel Robinson", "Marshal", "T7");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (119, 12, "Brennen Whitehead","Marshal", "Pitlane");
+INSERT INTO Marshal(employee_id, employer_id, name, role, tracklocation) VALUES (120, 12, "Juliet Hester", "Marshal", "T11");
 
 --INSERTING STEWARDS into STEWARDS and EMPLOYEES
 INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (21, 11, "Norton Pender","Steward");
@@ -377,6 +673,7 @@ INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) VALUES (
 
 
 --#1 UPDATE Driver Standings
+
 UPDATE Driver
 SET wins = 8, points = 287.5, overallstanding = 1, gpposition = 1, fastestlap = 0
 WHERE name = 'Max Verstappen';
@@ -724,7 +1021,6 @@ SELECT *
 FROM Driver;
 
 --INSERT More tuples
-INSERT INTO Employee(employee_id, employer_id, name, role) VALUES (31, 1, "John Doe", "someone");
 
 
 
@@ -758,3 +1054,40 @@ DELETE FROM Event WHERE event_id =
     FROM EventEmployers
     WHERE event_id = ? AND employer_id = ?;
     )
+
+SELECT Marshal.employee_id
+FROM Employee, Marshal
+WHERE Employee.employee_id = Marshal.employee_id;
+
+SELECT Steward.employee_id
+FROM Employee, Steward
+WHERE Employee.employee_id = Steward.employee_id;
+
+SELECT Event.event_id, Event.name, Event.location, Event.time, count(spec_id)
+FROM Event, EventEmployers, SpectatorEvents
+WHERE EventEmployers.event_id = Event.event_id AND Event.event_id = SpectatorEvents.event_id AND EventEmployers.employer_id = 12
+GROUP BY Event.event_id;
+
+SELECT UNIQUE(Event.event_id), Event.name, Event.location, Event.time
+
+SELECT event_id, name, location, time, SUM(count)
+FROM
+    (SELECT Event.event_id, Event.name, Event.location, Event.time, count(spec_id) as count
+    FROM Event, EventEmployers, SpectatorEvents
+    WHERE EventEmployers.event_id = Event.event_id AND Event.event_id = SpectatorEvents.event_id AND EventEmployers.employer_id = 13
+    GROUP BY Event.event_id
+    UNION
+    SELECT Event.event_id, Event.name, Event.location, Event.time, 0 as count
+    FROM Event, EventEmployers EE, Employer Emp
+    WHERE Event.event_id = EE.event_id AND EE.employer_id = 13 AND Emp.employer_id = EE.employer_id
+    GROUP BY Event.event_id
+    ORDER BY count)
+GROUP BY event_id;
+
+DELETE FROM EventEmployers
+WHERE employer_id = 22;
+
+INSERT Into EventEmployers(event_id, employer_id)
+SELECT Event.event_id, Employer.employer_id
+FROM Event, Employer
+WHERE employer_id = 22;

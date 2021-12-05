@@ -3,13 +3,6 @@ import java.text.SimpleDateFormat;
 import java.util.Scanner;
 import java.util.Date;
 
-import javax.naming.spi.DirStateFactory.Result;
-
-import java.io.FileReader;
-import java.lang.reflect.Parameter;
-import java.io.BufferedReader;
-import java.io.File;
-
 public class phase3 {
     private Connection c = null;
     private String dbName;
@@ -28,6 +21,24 @@ public class phase3 {
 
                 c = DriverManager.getConnection(connectionString); // open connection
                 c.setAutoCommit(false); // disables autotransactions
+
+                //Statement s = c.createStatement();
+                //s.executeUpdate("PRAGMA foreign_keys = ON; ");
+
+                PreparedStatement s1 = c.prepareStatement("PRAGMA foreign_keys = ON; ");
+                s1.executeUpdate();
+
+                PreparedStatement s2 = c.prepareStatement("PRAGMA foreign_keys; ");
+                ResultSet set = s2.executeQuery();
+
+                while(set.next()){
+                    int val = set.getInt(1);
+                    System.out.printf("%-10d\n", val);
+                }
+
+                s1.close();
+                s2.close();
+                set.close();
 
                 isConnected = true;
                 System.out.print("Connected. ");
@@ -56,6 +67,37 @@ public class phase3 {
     }
 
     // SPECTATOR METHODS
+    private int insertSpectator(String name) {
+        try {
+            String maxSpecQ = "SELECT MAX(spec_id) FROM Spectator; ";
+            PreparedStatement maxSpec = c.prepareStatement(maxSpecQ);
+            ResultSet maxresult = maxSpec.executeQuery();
+            int specID = maxresult.getInt(1) + 1;
+
+            String insertSpecQ = "INSERT INTO Spectator(spec_id, name) VALUES (?,?)";
+            PreparedStatement insertSpec = c.prepareStatement(insertSpecQ);
+            // ParameterMetaData data = insertTasks.getParameterMetaData();
+            // System.out.println(data.getParameterCount());
+            insertSpec.setInt(1, specID);
+            insertSpec.setString(2, name);
+            insertSpec.executeUpdate();
+
+            c.commit();
+            maxresult.close();
+            maxSpec.close();
+            insertSpec.close();
+            return specID;
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+        return -1;
+    }
+
     private void printEvents() {
         System.out.println("Printing Events");
         System.out.printf("%-10s %-30s %30s %25s\n",
@@ -157,6 +199,30 @@ public class phase3 {
             }
         }
         return -1;
+    }
+
+    private String getTeamName(int team_id) {
+        try {
+            String getID = "SELECT name " +
+                    "FROM Team " +
+                    "WHERE employer_id = ?; ";
+            PreparedStatement fetch = c.prepareStatement(getID);
+            fetch.setInt(1, team_id);
+            ResultSet names = fetch.executeQuery();
+            String nameval = names.getString(1);
+
+            fetch.close();
+            names.close();
+            return nameval;
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+        return "";
     }
 
     private void insertSpectatorEvents(int _spec_id, int _event_id) {
@@ -416,31 +482,13 @@ public class phase3 {
         }
     }
 
-    private void createTaskOne(int _employer_id, String _description, String _deadline) {
-        System.out.printf("%-12s %-30s %-10s\n",
-                "Employee ID", "Name", "Role");
-        Scanner scan = new Scanner(System.in);
+    private void createTaskOne(int _employer_id, String _description, String _deadline, int _employee_id) {
         try {
-            String employeeList = "SELECT employee_id, name, role FROM Employee WHERE employer_id = ?; ";
-            PreparedStatement list = c.prepareStatement(employeeList);
-            list.setInt(1, _employer_id);
-            ResultSet fulllist = list.executeQuery();
-
-            while (fulllist.next()) {
-                int id = fulllist.getInt(1);
-                String name = fulllist.getString(2);
-                String role = fulllist.getString(3);
-                System.out.printf("%-12d %-30s %-10s\n", id, name, role);
-            }
-
             String maxTaskQ = "SELECT MAX(task_id) FROM Task WHERE employer_id = ?; ";
             PreparedStatement maxTask = c.prepareStatement(maxTaskQ);
             maxTask.setInt(1, _employer_id);
             ResultSet maxresult = maxTask.executeQuery();
             int taskID = maxresult.getInt(1) + 1;
-
-            System.out.println("Which employee do you want to delegate to this task? (select ID)");
-            int _employee_id = Integer.parseInt(scan.nextLine());
 
             String insertTaskOne = "INSERT INTO Task(task_id, employer_id, employee_id, description, deadline) " +
                     "SELECT ?, employer.employer_id, employee_id, ?, ? " +
@@ -457,12 +505,9 @@ public class phase3 {
             insertTasks.executeUpdate();
 
             c.commit();
-            fulllist.close();
             maxresult.close();
-            list.close();
             maxTask.close();
             insertTasks.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -473,10 +518,9 @@ public class phase3 {
         }
     }
 
-    private void deleteTask(int _employer_id) {
+    private void viewTasks(int _employer_id) {
         System.out.printf("%-7s %-12s %-12s %-50s %-20s\n",
                 "Task ID", "Employer ID", "Employee ID", "Description", "Deadline");
-        Scanner scan = new Scanner(System.in);
         try {
             String taskList = "SELECT * FROM Task WHERE employer_id = ?; ";
             PreparedStatement list = c.prepareStatement(taskList);
@@ -492,22 +536,29 @@ public class phase3 {
                 System.out.printf("%-7d %-12d %-12d %-50s %-20s\n",
                         taskID, employeeid, employerid, description, deadline);
             }
+            listOfTasks.close();
+            list.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
 
-            System.out.println("Which task would you like to delete?");
+    private void deleteTask(int _employer_id, int specifictask) {
 
-            int specfictask = Integer.parseInt(scan.nextLine());
-
+        try {
             String deleteTaskString = "DELETE FROM Task WHERE employer_id = ? AND task_id = ?";
             PreparedStatement deleteTask = c.prepareStatement(deleteTaskString);
             deleteTask.setInt(1, _employer_id);
-            deleteTask.setInt(2, specfictask);
+            deleteTask.setInt(2, specifictask);
             deleteTask.executeUpdate();
 
             c.commit();
-            listOfTasks.close();
-            list.close();
             deleteTask.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -518,25 +569,8 @@ public class phase3 {
         }
     }
 
-    private void assignTask(int _employer_id) {
-        System.out.printf("%-7s %-12s %-12s %-50s %-20s\n",
-                "Task ID", "Employer ID", "Employee ID", "Description", "Deadline");
-        Scanner scan = new Scanner(System.in);
+    private void viewEmployees(int _employer_id) {
         try {
-            String taskList = "SELECT * FROM Task WHERE employer_id = ?; ";
-            PreparedStatement list = c.prepareStatement(taskList);
-            list.setInt(1, _employer_id);
-            ResultSet listOfTasks = list.executeQuery();
-
-            while (listOfTasks.next()) {
-                int taskID = listOfTasks.getInt(1);
-                int employeeid = listOfTasks.getInt(2);
-                int employerid = listOfTasks.getInt(3);
-                String description = listOfTasks.getString(4);
-                String deadline = listOfTasks.getString(5);
-                System.out.printf("%-7d %-12d %-12d %-50s %-20s\n",
-                        taskID, employeeid, employerid, description, deadline);
-            }
             System.out.println("");
             System.out.printf("%-12s %-30s %-10s\n",
                     "Employee ID", "Name", "Role");
@@ -552,12 +586,21 @@ public class phase3 {
                 String role = employeelist.getString(3);
                 System.out.printf("%-12d %-30s %-10s\n", id, name, role);
             }
-            System.out.println("Which task would you like to assign someone to? (ID value)");
-            int _specfictask = Integer.parseInt(scan.nextLine());
-            System.out.println("To who would you like to assign this task to");
-            int _employee_id = Integer.parseInt(scan.nextLine());
+            list2.close();
+            employeelist.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
 
-            System.out.println(_specfictask + " " + _employer_id + " " + _employee_id);
+    private void assignTask(int _employer_id, int _specifictask, int _employee_id) {
+        try {
+            // System.out.println(_specfictask + " " + _employer_id + " " + _employee_id);
 
             String assignTaskOne = "INSERT INTO Task(task_id, employer_id, employee_id, description, deadline) " +
                     "SELECT task_id, employer.employer_id, employee.employee_id, description, deadline " +
@@ -567,7 +610,7 @@ public class phase3 {
                     "AND employer.employer_id = task.employer_id " +
                     "LIMIT 1; ";
             PreparedStatement assignTask = c.prepareStatement(assignTaskOne);
-            assignTask.setInt(1, _specfictask);
+            assignTask.setInt(1, _specifictask);
             assignTask.setInt(2, _employer_id);
             assignTask.setInt(3, _employee_id);
             assignTask.executeUpdate();
@@ -582,12 +625,7 @@ public class phase3 {
             // }
 
             c.commit();
-            listOfTasks.close();
-            list.close();
-            list2.close();
-            employeelist.close();
             assignTask.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -598,18 +636,8 @@ public class phase3 {
         }
     }
 
-    private void createEvent(int _employer_id) {
+    private void createEvent(int _employer_id, String name, String location, String time) {
         try {
-            Scanner scan = new Scanner(System.in);
-            System.out.println("What is the name of the event?");
-            String name = String.valueOf(scan.nextLine());
-
-            System.out.println("What is the location of the event?");
-            String location = String.valueOf(scan.nextLine());
-
-            System.out.println("What time is the event meant to start? (yyyy-MM-dd HH:mm:ss formatting)");
-            String time = String.valueOf(scan.nextLine());
-
             String maxEventQ = "SELECT MAX(event_id) FROM Event; ";
             PreparedStatement maxEvent = c.prepareStatement(maxEventQ);
             ResultSet maxresult = maxEvent.executeQuery();
@@ -639,7 +667,6 @@ public class phase3 {
             c.commit();
             insert.close();
             insertEventEmpl.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -650,10 +677,9 @@ public class phase3 {
         }
     }
 
-    private void deleteEvent(int _employer_id) {
+    private void viewEventFromEmployer(int _employer_id) {
         System.out.printf("%-8s %-50s %-30s %-50s %-20s\n",
                 "Event ID", "Employer Name", "Event Name", "Location", "Time");
-        Scanner scan = new Scanner(System.in);
         try {
             String eventList = "SELECT Event.event_id, Emp.name, Event.name, Event.location, Event.time " +
                     "FROM Event, EventEmployers EE, Employer Emp " +
@@ -670,33 +696,9 @@ public class phase3 {
                 String time = listofEvents.getString(5);
                 System.out.printf("%-8s %-50s %-30s %-50s %-20s\n", eventid, emplname, eventname, location, time);
             }
-            System.out.println("Which event would you like to delete? (Event ID) ");
 
-            int specficevent = Integer.parseInt(scan.nextLine());
-
-            String deleteTaskString = "DELETE FROM Event WHERE event_id = " +
-                    "(SELECT event_id FROM EventEmployers WHERE event_id = ? AND employer_id = ?); ";
-            PreparedStatement deleteEvent = c.prepareStatement(deleteTaskString);
-            deleteEvent.setInt(1, specficevent);
-            deleteEvent.setInt(2, _employer_id);
-            deleteEvent.executeUpdate();
-
-            deleteTaskString = "DELETE FROM EventEmployers WHERE event_id = ? AND employer_id = ?";
-            deleteEvent = c.prepareStatement(deleteTaskString);
-            deleteEvent.setInt(1, specficevent);
-            deleteEvent.setInt(2, _employer_id);
-            deleteEvent.executeUpdate();
-
-            deleteTaskString = "DELETE FROM SpectatorEvents WHERE event_id = ?";
-            deleteEvent = c.prepareStatement(deleteTaskString);
-            deleteEvent.setInt(1, specficevent);
-            deleteEvent.executeUpdate();
-
-            c.commit();
             listofEvents.close();
             list.close();
-            deleteEvent.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -707,10 +709,9 @@ public class phase3 {
         }
     }
 
-    private void assignEvent(int _employer_id) {
+    private void viewEvents() {
         System.out.printf("%-8s %-30s %-50s %-20s\n",
                 "Event ID", "Event Name", "Location", "Time");
-        Scanner scan = new Scanner(System.in);
         try {
             String eventList = "SELECT Event.event_id, Event.name, Event.location, Event.time " +
                     "FROM Event; ";
@@ -725,21 +726,9 @@ public class phase3 {
                 String time = listofEvents.getString(4);
                 System.out.printf("%-8s %-30s %-50s %-20s\n", eventid, eventname, location, time);
             }
-            System.out.println("Which event would you like to register for? (Event ID) ");
 
-            int specficevent = Integer.parseInt(scan.nextLine());
-
-            String assignTaskString = "INSERT INTO EventEmployers (event_id, employer_id) VALUES(?,?); ";
-            PreparedStatement assignEvent = c.prepareStatement(assignTaskString);
-            assignEvent.setInt(1, specficevent);
-            assignEvent.setInt(2, _employer_id);
-            assignEvent.executeUpdate();
-
-            c.commit();
             listofEvents.close();
             list.close();
-            assignEvent.close();
-            scan.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             try {
@@ -749,6 +738,102 @@ public class phase3 {
             }
         }
     }
+
+    private void deleteEvent(int _employer_id, int specificevent) {
+        try {
+            String deleteEventString = "DELETE FROM Event WHERE event_id = " +
+                    "(SELECT event_id FROM EventEmployers WHERE event_id = ? AND employer_id = ?); ";
+            PreparedStatement deleteEvent = c.prepareStatement(deleteEventString);
+            deleteEvent.setInt(1, specificevent);
+            deleteEvent.setInt(2, _employer_id);
+            deleteEvent.executeUpdate();
+
+            deleteEventString = "DELETE FROM EventEmployers WHERE event_id = ? AND employer_id = ?";
+            deleteEvent = c.prepareStatement(deleteEventString);
+            deleteEvent.setInt(1, specificevent);
+            deleteEvent.setInt(2, _employer_id);
+            deleteEvent.executeUpdate();
+
+            deleteEventString = "DELETE FROM SpectatorEvents WHERE event_id = ?";
+            deleteEvent = c.prepareStatement(deleteEventString);
+            deleteEvent.setInt(1, specificevent);
+            deleteEvent.executeUpdate();
+
+            c.commit();
+            deleteEvent.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void assignEvent(int _employer_id, int specificevent) {
+        try {
+            String assignTaskString = "INSERT INTO EventEmployers (event_id, employer_id) VALUES(?,?); ";
+            PreparedStatement assignEvent = c.prepareStatement(assignTaskString);
+            assignEvent.setInt(1, specificevent);
+            assignEvent.setInt(2, _employer_id);
+            assignEvent.executeUpdate();
+
+            c.commit();
+            assignEvent.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void viewEventsPopularity(int _employer_id) {
+        System.out.printf("%-8s %-30s %-50s %-20s %-20s\n",
+                "Event ID", "Event Name", "Location", "Time", "Number of spectators");
+        try {
+            String eventList = "SELECT event_id, name, location, time, SUM(count) " +
+            "FROM " +
+                "(SELECT Event.event_id, Event.name, Event.location, Event.time, count(spec_id) as count " +
+                "FROM Event, EventEmployers, SpectatorEvents " +
+                "WHERE EventEmployers.event_id = Event.event_id AND Event.event_id = SpectatorEvents.event_id AND EventEmployers.employer_id = ? " +
+                "GROUP BY Event.event_id " +
+                "UNION " +
+                "SELECT Event.event_id, Event.name, Event.location, Event.time, 0 as count " +
+                "FROM Event, EventEmployers EE, Employer Emp " +
+                "WHERE Event.event_id = EE.event_id AND EE.employer_id = ? AND Emp.employer_id = EE.employer_id " +
+                "GROUP BY Event.event_id " +
+                "ORDER BY count) " +
+            "GROUP BY event_id; ";
+            PreparedStatement list = c.prepareStatement(eventList);
+            list.setInt(1, _employer_id);
+            list.setInt(2, _employer_id);
+            ResultSet listofEvents = list.executeQuery();
+
+            while (listofEvents.next()) {
+                int eventid = listofEvents.getInt(1);
+                String eventname = listofEvents.getString(2);
+                String location = listofEvents.getString(3);
+                String time = listofEvents.getString(4);
+                int popularity = listofEvents.getInt(5);
+                System.out.printf("%-8s %-30s %-50s %-20s %-20s\n", eventid, eventname, location, time, popularity);
+            }
+
+            listofEvents.close();
+            list.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
 
     private void viewWeekendResults(int viewerid, String role) {
         System.out.printf("%-30s %-35s %-12s %-7s\n",
@@ -790,6 +875,8 @@ public class phase3 {
             }
             if (role.equals("sp")) {
                 insertSpecDriverViewTracker(viewerid, 0);
+            } else if (role.equals("st")) {
+                insertStewardDriverViewTracker(viewerid, 0);
             }
 
             weekendResults.close();
@@ -808,13 +895,18 @@ public class phase3 {
         try {
             String getID = "";
             if (role.equals("marshal")) {
-                getID = "SELECT employee_id " +
-                        "FROM Employee " +
-                        "WHERE name = ?; ";
-            } else {
                 getID = "SELECT Marshal.employee_id " +
                         "FROM Employee, Marshal " +
                         "WHERE Employee.employee_id = Marshal.employee_id AND marshal.name = ?; ";
+            }
+            if (role.equals("steward")) {
+                getID = "SELECT Steward.employee_id " +
+                        "FROM Employee, Steward " +
+                        "WHERE Employee.employee_id = Steward.employee_id AND steward.name = ?; ";
+            } else {
+                getID = "SELECT employee_id " +
+                        "FROM Employee " +
+                        "WHERE name = ?; ";
             }
             PreparedStatement fetch = c.prepareStatement(getID);
             fetch.setString(1, _name);
@@ -889,271 +981,713 @@ public class phase3 {
         }
     }
 
+    private void insertStewardDriverViewTracker(int _steward_id, int _driver_id) {
+        try {
+            String insertSTEWARDDVT = "INSERT INTO StewardDriverViewTracker(employee_id, driver_id, timestamp) " +
+                    "VALUES(?,?,?); ";
+            PreparedStatement insert = c.prepareStatement(insertSTEWARDDVT);
+
+            Date date = new Date();
+            Timestamp arg = new java.sql.Timestamp(date.getTime());
+            String formatarg = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(arg);
+
+            insert.setInt(1, _steward_id);
+            insert.setInt(2, _driver_id);
+            insert.setString(3, formatarg);
+            insert.executeUpdate();
+
+            c.commit();
+            insert.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void insertStewardTeamViewTracker(int _steward_id, int _team_id) {
+        try {
+            String insertSTVT = "INSERT INTO StewardTeamViewTracker(employee_id, employer_id, timestamp) " +
+                    "VALUES(?,?,?); ";
+            PreparedStatement insert = c.prepareStatement(insertSTVT);
+
+            Date date = new Date();
+            Timestamp arg = new java.sql.Timestamp(date.getTime());
+            String formatarg = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(arg);
+
+            insert.setInt(1, _steward_id);
+            insert.setInt(2, _team_id);
+            insert.setString(3, formatarg);
+            insert.executeUpdate();
+
+            c.commit();
+            insert.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    public int getTeamIDFromDriver(int _driver_id) {
+        try {
+            String getID = "SELECT employer_id " +
+                    "FROM Team, Driver " +
+                    "WHERE Team.employer_id = Driver.team_id AND driver_id = ?; ";
+            PreparedStatement fetch = c.prepareStatement(getID);
+            fetch.setInt(1, _driver_id);
+            ResultSet id = fetch.executeQuery();
+            int idvalue = id.getInt(1);
+
+            fetch.close();
+            id.close();
+            return idvalue;
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+        return -1;
+    }
+
+    private void updateDriverStatistics(int _driver_id, int difference) {
+        try {
+            String update = "UPDATE Driver SET points = points - ? WHERE driver_id = ?";
+            PreparedStatement updateDriver = c.prepareStatement(update);
+            updateDriver.setInt(1, difference);
+            updateDriver.setInt(2, _driver_id);
+            updateDriver.executeUpdate();
+
+            c.commit();
+            updateDriver.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void updateTeamStatistics(int _team_id, int difference) {
+        try {
+            String update = "UPDATE Team SET points = points - ? WHERE employer_id = ?";
+            PreparedStatement updateTeam = c.prepareStatement(update);
+            updateTeam.setInt(1, difference);
+            updateTeam.setInt(2, _team_id);
+            updateTeam.executeUpdate();
+
+            c.commit();
+            updateTeam.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void insertStewardDriverUpdateTracker(int _steward_id, int _driver_id) {
+        try {
+            String insertSTEWARDDVT = "INSERT INTO StewardDriverUpdateTracker(employee_id, driver_id, timestamp) " +
+                    "VALUES(?,?,?); ";
+            PreparedStatement insert = c.prepareStatement(insertSTEWARDDVT);
+
+            Date date = new Date();
+            Timestamp arg = new java.sql.Timestamp(date.getTime());
+            String formatarg = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(arg);
+
+            insert.setInt(1, _steward_id);
+            insert.setInt(2, _driver_id);
+            insert.setString(3, formatarg);
+            insert.executeUpdate();
+
+            c.commit();
+            insert.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void insertStewardTeamUpdateTracker(int _steward_id, int _team_id) {
+        try {
+            String insertSTVT = "INSERT INTO StewardTeamUpdateTracker(employee_id, employer_id, timestamp) " +
+                    "VALUES(?,?,?); ";
+            PreparedStatement insert = c.prepareStatement(insertSTVT);
+
+            Date date = new Date();
+            Timestamp arg = new java.sql.Timestamp(date.getTime());
+            String formatarg = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(arg);
+
+            insert.setInt(1, _steward_id);
+            insert.setInt(2, _team_id);
+            insert.setString(3, formatarg);
+            insert.executeUpdate();
+
+            c.commit();
+            insert.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void viewDriverNames() {
+        System.out.printf("%-30s\n",
+                "Name");
+        try {
+            String viewDrNames = "SELECT name " +
+                    "FROM Driver; ";
+            PreparedStatement view = c.prepareStatement(viewDrNames);
+            ResultSet DrNameList = view.executeQuery();
+
+            while (DrNameList.next()) {
+                String name = DrNameList.getString(1);
+                System.out.printf("%-30s\n", name);
+            }
+            view.close();
+            DrNameList.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void viewTeamNames() {
+        System.out.printf("%-35s\n", "Name");
+        try {
+            String viewTeamNames = "SELECT name " +
+                    "FROM Team; ";
+            PreparedStatement view = c.prepareStatement(viewTeamNames);
+            ResultSet TeamNameList = view.executeQuery();
+
+            while (TeamNameList.next()) {
+                String name = TeamNameList.getString(1);
+                System.out.printf("%-35s\n", name);
+            }
+
+            view.close();
+            TeamNameList.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void viewEmployerNames() {
+        System.out.printf("%-50s\n", "Name");
+        try {
+            String viewEmployerNames = "SELECT name " +
+                    "FROM Employer; ";
+            PreparedStatement view = c.prepareStatement(viewEmployerNames);
+            ResultSet EmplNameList = view.executeQuery();
+
+            while (EmplNameList.next()) {
+                String name = EmplNameList.getString(1);
+                System.out.printf("%-50s\n", name);
+            }
+
+            view.close();
+            EmplNameList.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
     public static void main(String args[]) {
         Scanner scan = new Scanner(System.in);
-        String input;
+        String input = " ";
         phase3 dbconnection = new phase3();
 
         dbconnection.openConnection("data.sqlite");
 
-        System.out.println("What role are you? [sp]ectator, [employer], [team], [employee], [st]eward, [ma]rshal");
-        input = String.valueOf(scan.nextLine());
+        while (!input.equals("STOP")) {
+            System.out.println(
+                    "What role are you? [sp]ectator, [employer], [team], [employee], [st]eward, [ma]rshal? Or type \"STOP\" to exit.");
+            input = String.valueOf(scan.nextLine());
+            switch (input) {
+                case "sp":
+                    System.out.println("Who are you? (insert name, case sensitive)");
+                    String nameofsp = String.valueOf(scan.nextLine());
+                    int userId = dbconnection.getSpecID(nameofsp);
 
-        switch (input) {
-            case "sp":
-                System.out.println("Who are you? (insert name, case sensitive)");
-                String nameofsp = String.valueOf(scan.nextLine());
-                System.out.println(
-                        "What do you want to do?\n 1. View/Sign up for events\n 2. View Driver Standings\n 3. View team standings\n 4. View "
-                                +
-                                "specific driver\n 5. View specific team\n 6. View race weekend results\n(Enter 1-6)");
-                int input2 = Integer.parseInt(scan.nextLine());
+                    if (userId < 1) {
+                        System.out.println("You're not in the system. Inserting you in the system.");
+                        userId = dbconnection.insertSpectator(nameofsp);
+                    }
 
-                if (input2 == 1) {
-                    System.out.println("Viewing Events");
-                    dbconnection.printEvents();
                     System.out.println(
-                            nameofsp + ", Which event do you want to sign up for? (Insert event ID or -1 if none)");
-                    int eventId = Integer.parseInt(scan.nextLine());
-                    if (eventId > -1) {
-                        System.out.println("Registering");
-                        int userId = dbconnection.getSpecID(nameofsp);
-
-                        if (userId < 1) {
-                            System.out.println("You're not in the system. Would you like to be?");
-                        } else {
-                            dbconnection.insertSpectatorEvents(userId, eventId);
-                        }
-                    } else {
-                        break;
-                    }
-                } else if (input2 == 2) {
-                    System.out.println("Viewing Driver Standings");
-
-                    int userId = dbconnection.getSpecID(nameofsp);
-                    dbconnection.viewDriverStandings();
-                    if (userId > -1) {
-                        dbconnection.insertSpecDriverViewTracker(userId, 0);
-                    }
-                } else if (input2 == 3) {
-                    System.out.println("Viewing Team Standings");
-
-                    int userId = dbconnection.getSpecID(nameofsp);
-                    dbconnection.viewTeamStandings();
-
-                    if (userId > -1) {
-                        dbconnection.insertSpecTeamViewTracker(userId, 0);
-                    }
-                } else if (input2 == 4) {
-                    System.out.println("Type out the name of the driver you want to view (case sensitive)");
-                    String drivername = String.valueOf(scan.nextLine());
-
-                    int userId = dbconnection.getSpecID(nameofsp);
-                    int driverId = dbconnection.getDriverID(drivername);
-
-                    if (driverId > -1) {
-                        dbconnection.viewDriverStatistics(drivername);
-                        dbconnection.insertSpecDriverViewTracker(userId, driverId);
-                    } else {
-                        System.out.println("Invalid name");
-                        break;
-                    }
-                } else if (input2 == 5) {
-                    System.out.println("Type out the name of the team you want to view (case sensitive)");
-                    String teamname = String.valueOf(scan.nextLine());
-
-                    int userId = dbconnection.getSpecID(nameofsp);
-                    int teamId = dbconnection.getTeamID(teamname);
-
-                    if (teamId > -1) {
-                        dbconnection.viewTeamStatistics(teamname);
-                        dbconnection.insertSpecTeamViewTracker(userId, teamId);
-                    } else {
-                        System.out.println("Invalid name");
-                        break;
-                    }
-                } else if (input2 == 6) {
-                    int userId = dbconnection.getSpecID(nameofsp);
-                    dbconnection.viewWeekendResults(userId, input);
-                } else {
-                    System.out.println("Improper operation");
-                }
-
-                break;
-
-            case "employer":
-                System.out.println("What employer are you representing? (insert name, case sensitive)");
-                String nameofemployer = String.valueOf(scan.nextLine());
-
-                int employerid = dbconnection.getEmployerID(nameofemployer);
-                if (employerid < 0) {
-                    System.out.println("Invalid employer");
-                } else {
-                    System.out.println(
-                            "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
+                            "What do you want to do?\n 1. View/Sign up for events\n 2. View Driver Standings\n 3. View team standings\n 4. View "
                                     +
-                                    "4. Creating an event\n 5. View and Delete an Event\n 6. Assign yourself to an event\n(Enter 1-6)");
-                    input2 = Integer.parseInt(scan.nextLine());
+                                    "specific driver\n 5. View specific team\n 6. View race weekend results\n(Enter 1-6)");
+                    int input2 = Integer.parseInt(scan.nextLine());
+
                     if (input2 == 1) {
-                        System.out.println("Describe the task.");
-                        String desc = String.valueOf(scan.nextLine());
-                        System.out.println("Insert the time. (yyyy-MM-dd HH:mm:ss formatting)");
-                        String time = String.valueOf(scan.nextLine());
+                        System.out.println("Viewing Events");
+                        dbconnection.printEvents();
                         System.out.println(
-                                "Do you want to assign this task to everyone or just one employee? (0 for all/1 for one)");
-                        int confirm = Integer.parseInt(scan.nextLine());
-                        if (confirm == 0) {
-                            System.out.println("Inserting into tasks");
-                            dbconnection.createTaskAll(employerid, desc, time);
-                        } else if (confirm == 1) {
-                            dbconnection.createTaskOne(employerid, desc, time);
-                            System.out.println("Inserting 1");
+                                nameofsp + ", Which event do you want to sign up for? (Insert event ID or -1 if none)");
+                        int eventId = Integer.parseInt(scan.nextLine());
+                        if (eventId > -1) {
+                            System.out.println("Registering");
+
+                            if (userId < 1) {
+                                System.out.println("You're not in the system. Inserting you in the system.");
+                                userId = dbconnection.insertSpectator(nameofsp);
+                                dbconnection.insertSpectatorEvents(userId, eventId);
+                            } else {
+                                dbconnection.insertSpectatorEvents(userId, eventId);
+                            }
                         } else {
-                            System.out.println("Improper operation");
+                            break;
                         }
                     } else if (input2 == 2) {
-                        dbconnection.deleteTask(employerid);
-                        System.out.println("Deleting task");
+                        System.out.println("Viewing Driver Standings");
+
+                        userId = dbconnection.getSpecID(nameofsp);
+                        dbconnection.viewDriverStandings();
+                        if (userId > -1) {
+                            dbconnection.insertSpecDriverViewTracker(userId, 0);
+                        }
                     } else if (input2 == 3) {
-                        dbconnection.assignTask(employerid);
-                        System.out.println("Assigning task: ");
+                        System.out.println("Viewing Team Standings");
+
+                        userId = dbconnection.getSpecID(nameofsp);
+                        dbconnection.viewTeamStandings();
+
+                        if (userId > -1) {
+                            dbconnection.insertSpecTeamViewTracker(userId, 0);
+                        }
                     } else if (input2 == 4) {
-                        dbconnection.createEvent(employerid);
+                        dbconnection.viewDriverNames();
+                        System.out.println("Type out the name of the driver you want to view (case sensitive)");
+                        String drivername = String.valueOf(scan.nextLine());
+
+                        userId = dbconnection.getSpecID(nameofsp);
+                        int driverId = dbconnection.getDriverID(drivername);
+
+                        if (driverId > -1) {
+                            dbconnection.viewDriverStatistics(drivername);
+                            dbconnection.insertSpecDriverViewTracker(userId, driverId);
+                        } else {
+                            System.out.println("Invalid driver name");
+                            break;
+                        }
                     } else if (input2 == 5) {
-                        dbconnection.deleteEvent(employerid);
-                        System.out.println("Deleting event");
+                        dbconnection.viewTeamNames();
+                        System.out.println("Type out the name of the team you want to view (case sensitive)");
+                        String teamname = String.valueOf(scan.nextLine());
+
+                        userId = dbconnection.getSpecID(nameofsp);
+                        int teamId = dbconnection.getTeamID(teamname);
+
+                        if (teamId > -1) {
+                            dbconnection.viewTeamStatistics(teamname);
+                            dbconnection.insertSpecTeamViewTracker(userId, teamId);
+                        } else {
+                            System.out.println("Invalid team name");
+                            break;
+                        }
                     } else if (input2 == 6) {
-                        dbconnection.assignEvent(employerid);
-                        System.out.println("Assigning event");
+                        userId = dbconnection.getSpecID(nameofsp);
+                        dbconnection.viewWeekendResults(userId, input);
                     } else {
                         System.out.println("Improper operation");
                     }
 
-                }
-                break;
+                    break;
 
-            case "team":
-                System.out.println("What team are you representing? (insert name, case sensitive)");
-                String nameofteam = String.valueOf(scan.nextLine());
+                case "employer":
+                    dbconnection.viewEmployerNames();
+                    System.out.println("What employer are you representing? (insert name, case sensitive)");
+                    String nameofemployer = String.valueOf(scan.nextLine());
 
-                int teamid = dbconnection.getEmployerID(nameofteam);
-                if (teamid < 0) {
-                    System.out.println("Invalid employer");
-                } else {
-                    System.out.println(
-                            "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
-                                    +
-                                    "4. Access driver results\n 5. Access team results\n 6. Access weekend results (Enter 1-6)");
-                    input2 = Integer.parseInt(scan.nextLine());
-                    if (input2 == 1) {
-                        System.out.println("Describe the task.");
-                        String desc = String.valueOf(scan.nextLine());
-                        System.out.println("Insert the time. (yyyy-MM-dd HH:mm:ss formatting)");
-                        String time = String.valueOf(scan.nextLine());
+                    int employerid = dbconnection.getEmployerID(nameofemployer);
+                    if (employerid < 0) {
+                        System.out.println("Invalid employer");
+                    } else {
                         System.out.println(
-                                "Do you want to assign this task to everyone or just one employee? (0 for all/1 for one)");
-                        int confirm = Integer.parseInt(scan.nextLine());
-                        if (confirm == 0) {
-                            System.out.println("Inserting into tasks");
-                            dbconnection.createTaskAll(teamid, desc, time);
-                        } else if (confirm == 1) {
-                            dbconnection.createTaskOne(teamid, desc, time);
-                            System.out.println("Inserting 1");
+                                "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
+                                        +
+                                        "4. Creating an event\n 5. View and Delete an Event\n 6. Assign yourself to an event\n " +
+                                        "7. View Event Popularity\n(Enter 1-7)");
+                        input2 = Integer.parseInt(scan.nextLine());
+                        if (input2 == 1) {
+                            System.out.println("Describe the task.");
+                            String desc = String.valueOf(scan.nextLine());
+                            System.out.println("Insert the time. (yyyy-MM-dd HH:mm:ss formatting)");
+                            String time = String.valueOf(scan.nextLine());
+                            System.out.println(
+                                    "Do you want to assign this task to everyone or just one employee? (0 for all/1 for one)");
+                            int confirm = Integer.parseInt(scan.nextLine());
+                            if (confirm == 0) {
+                                System.out.println("Inserting into tasks");
+                                dbconnection.createTaskAll(employerid, desc, time);
+                            } else if (confirm == 1) {
+                                dbconnection.viewEmployees(employerid);
+                                System.out.println("Which employee do you want to delegate to this task? (select ID)");
+                                int _employee_id = Integer.parseInt(scan.nextLine());
+                                dbconnection.createTaskOne(employerid, desc, time, _employee_id);
+                                System.out.println("Inserting 1");
+                            } else {
+                                System.out.println("Improper operation");
+                            }
+                        } else if (input2 == 2) {
+                            dbconnection.viewTasks(employerid);
+                            System.out.println("Which task would you like to delete?");
+                            int _specfictask = Integer.parseInt(scan.nextLine());
+                            dbconnection.deleteTask(employerid, _specfictask);
+                            System.out.println("Deleting task");
+                            dbconnection.viewTasks(employerid);
+                        } else if (input2 == 3) {
+                            dbconnection.viewTasks(employerid);
+                            System.out.println("Which task would you like to assign someone to? (ID value)");
+                            int specfictask = Integer.parseInt(scan.nextLine());
+                            dbconnection.viewEmployees(employerid);
+                            System.out.println("To who would you like to assign this task to");
+                            int employeeid = Integer.parseInt(scan.nextLine());
+                            dbconnection.assignTask(employerid, specfictask, employeeid);
+                            System.out.println("Assigning task: ");
+                            dbconnection.viewTasks(employerid);
+                        } else if (input2 == 4) {
+                            System.out.println("What is the name of the event?");
+                            String name = String.valueOf(scan.nextLine());
+
+                            System.out.println("What is the location of the event?");
+                            String location = String.valueOf(scan.nextLine());
+
+                            System.out
+                                    .println("What time is the event meant to start? (yyyy-MM-dd HH:mm:ss formatting)");
+                            String time = String.valueOf(scan.nextLine());
+                            dbconnection.createEvent(employerid, name, location, time);
+                            dbconnection.viewEventFromEmployer(employerid);
+                        } else if (input2 == 5) {
+                            dbconnection.viewEventFromEmployer(employerid);
+                            System.out.println("Which event would you like to delete? (Event ID)");
+                            int specificevent = Integer.parseInt(scan.nextLine());
+
+                            dbconnection.deleteEvent(employerid, specificevent);
+                            System.out.println("Deleting event");
+                            dbconnection.viewEventFromEmployer(employerid);
+                        } else if (input2 == 6) {
+                            dbconnection.viewEvents();
+                            System.out.println("Which event would you like to register for? (Event ID) ");
+                            int specificevent = Integer.parseInt(scan.nextLine());
+                            dbconnection.assignEvent(employerid, specificevent);
+                            System.out.println("Assigning event");
+                            dbconnection.viewEventFromEmployer(employerid);
+                        } else if (input2 == 7){
+                            System.out.println("Viewing event popularity");
+                            dbconnection.viewEventsPopularity(employerid);
+                        }
+                        else {
+                            System.out.println("Improper operation");
+                        }
+
+                    }
+                    break;
+
+                case "team":
+                    dbconnection.viewTeamNames();
+                    System.out.println("What team are you representing? (insert name, case sensitive)");
+                    String nameofteam = String.valueOf(scan.nextLine());
+
+                    int teamid = dbconnection.getEmployerID(nameofteam);
+                    if (teamid < 0) {
+                        System.out.println("Invalid employer");
+                    } else {
+                        System.out.println(
+                                "What do you want to do?\n 1. Create new tasks\n 2. Delete old tasks\n 3. Assign tasks to existing employee\n "
+                                        +
+                                        "4. Access driver results\n 5. Access team results\n 6. Access weekend results (Enter 1-6)");
+                        input2 = Integer.parseInt(scan.nextLine());
+                        if (input2 == 1) {
+                            System.out.println("Describe the task.");
+                            String desc = String.valueOf(scan.nextLine());
+                            System.out.println("Insert the time. (yyyy-MM-dd HH:mm:ss formatting)");
+                            String time = String.valueOf(scan.nextLine());
+                            System.out.println(
+                                    "Do you want to assign this task to everyone or just one employee? (0 for all/1 for one)");
+                            int confirm = Integer.parseInt(scan.nextLine());
+                            if (confirm == 0) {
+                                System.out.println("Inserting into tasks");
+                                dbconnection.createTaskAll(teamid, desc, time);
+                            } else if (confirm == 1) {
+                                dbconnection.viewEmployees(teamid);
+                                // dbconnection.createTaskOne(teamid, desc, time);
+                                System.out.println("Inserting 1");
+                            } else {
+                                System.out.println("Improper operation");
+                            }
+
+                        } else if (input2 == 2) {
+                            dbconnection.viewTasks(teamid);
+                            System.out.println("Which task would you like to delete?");
+                            int _specfictask = Integer.parseInt(scan.nextLine());
+                            dbconnection.deleteTask(teamid, _specfictask);
+                            System.out.println("Deleting task");
+                            dbconnection.viewTasks(teamid);
+                        } else if (input2 == 3) {
+                            dbconnection.viewTasks(teamid);
+                            System.out.println("Which task would you like to assign someone to? (ID value)");
+                            int specfictask = Integer.parseInt(scan.nextLine());
+                            dbconnection.viewEmployees(teamid);
+                            System.out.println("To who would you like to assign this task to");
+                            int employeeid = Integer.parseInt(scan.nextLine());
+                            dbconnection.assignTask(teamid, specfictask, employeeid);
+                            System.out.println("Assigning task: ");
+                            dbconnection.viewTasks(teamid);
+                        } else if (input2 == 4) {
+                            System.out.println("Viewing driver standings");
+                            dbconnection.viewDriverStandings();
+                        } else if (input2 == 5) {
+                            System.out.println("Viewing team standings");
+                            dbconnection.viewTeamStandings();
+                        } else if (input2 == 6) {
+                            System.out.println("Viewing weekend results");
+                            dbconnection.viewWeekendResults(0, input);
                         } else {
                             System.out.println("Improper operation");
                         }
 
-                    } else if (input2 == 2) {
-                        dbconnection.deleteTask(teamid);
-                        System.out.println("Deleting selected tasks");
-                    } else if (input2 == 3) {
-                        dbconnection.assignTask(teamid);
-                        System.out.println("Assigning task: ");
-                    } else if (input2 == 4) {
+                    }
+                    break;
+                case "employee":
+                    System.out.println("Who are you? (insert name, case sensitive)");
+                    String nameofempl = String.valueOf(scan.nextLine());
+                    System.out.println(
+                            "What do you want to do?\n 1. View tasks assigned to them\n 2. Access driver results\n 3. Access team results\n "
+                                    +
+                                    "4. Access weekend results");
+                    input2 = Integer.parseInt(scan.nextLine());
+                    if (input2 == 1) {
+                        int employeeid = dbconnection.getEmployeeID(nameofempl, input);
+                        if (employeeid > -1) {
+                            employerid = dbconnection.getEmployerIDFromEmployee(nameofempl);
+                            dbconnection.viewIndividualTasks(employeeid, employerid);
+                            System.out.println("Viewing your tasks");
+                        } else {
+                            System.out.println("Invalid employee (wrong name)");
+                            break;
+                        }
+                    }
+                    else if (input2 == 2) {
                         System.out.println("Viewing driver standings");
                         dbconnection.viewDriverStandings();
-                    } else if (input2 == 5) {
-                        System.out.println("Viewing team standings");
+                    }
+                    else if (input2 == 3) {
+                        System.out.println("Viewing Team standings");
                         dbconnection.viewTeamStandings();
-                    } else if (input2 == 6) {
+                    }
+                    else if (input2 == 4) {
                         System.out.println("Viewing weekend results");
                         dbconnection.viewWeekendResults(0, input);
-                    } else {
-                        System.out.println("Improper operation");
                     }
+                    break;
+                case "st":
+                    System.out.println("Who are you? (insert name, case sensitive)");
+                    String nameofsteward = String.valueOf(scan.nextLine());
+                    int employeeid = dbconnection.getEmployeeID(nameofsteward, input);
+                    System.out.println(
+                            "What do you want to do?\n 1. View Tasks \n 2. Access driver results\n 3. Access team results\n "
+                                    +
+                                    "4. Access weekend results\n 5. View specific driver results\n 6. View specific team results\n 7. Update race results");
+                    input2 = Integer.parseInt(scan.nextLine());
+                    // employeeid = dbconnection.getEmployeeID(nameofsteward, input);
+                    if (employeeid > -1) {
+                        // employerid = dbconnection.getEmployerIDFromEmployee(nameofemnameofstewardpl);
+                        if (input2 == 1) {
+                            employerid = dbconnection.getEmployerIDFromEmployee(nameofsteward);
+                            dbconnection.viewIndividualTasks(employeeid, employerid);
+                            System.out.println("Viewing your tasks");
+                        }
+                        else if (input2 == 2) {
+                            System.out.println("Viewing Driver Standings");
+                            dbconnection.viewDriverStandings();
+                            dbconnection.insertStewardDriverViewTracker(employeeid, 0);
+                        }
 
-                }
-                break;
-            case "employee":
-                System.out.println("Who are you? (insert name, case sensitive)");
-                String nameofempl = String.valueOf(scan.nextLine());
-                System.out.println(
-                        "What do you want to do?\n 1. View tasks assigned to them\n 2. Access driver results\n 3. Access team results\n "
-                                +
-                                "4. Access weekend results");
-                input2 = Integer.parseInt(scan.nextLine());
-                if (input2 == 1) {
-                    int employeeid = dbconnection.getEmployeeID(nameofempl, input);
-                    if (employeeid > -1) {
-                        employerid = dbconnection.getEmployerIDFromEmployee(nameofempl);
-                        dbconnection.viewIndividualTasks(employeeid, employerid);
-                        System.out.println("Viewing your tasks");
+                        else if (input2 == 3) {
+                            System.out.println("Viewing Team Standings");
+                            dbconnection.viewTeamStandings();
+                            dbconnection.insertStewardTeamViewTracker(employeeid, 0);
+                        }
+
+                        else if (input2 == 4) {
+                            System.out.println("Viewing weekend results");
+                            dbconnection.viewWeekendResults(employeeid, input);
+                        }
+                        else if (input2 == 5) {
+                            dbconnection.viewDriverNames();
+                            System.out.println("Type out the name of the driver you want to view (case sensitive)");
+                            String drivername = String.valueOf(scan.nextLine());
+                            int driverId = dbconnection.getDriverID(drivername);
+
+                            if (driverId > -1) {
+                                dbconnection.viewDriverStatistics(drivername);
+                                dbconnection.insertStewardDriverViewTracker(employeeid, driverId);
+                            } else {
+                                System.out.println("Invalid driver name");
+                                break;
+                            }
+                        }
+                        else if (input2 == 6) {
+                            dbconnection.viewTeamNames();
+                            System.out.println("Type out the name of the team you want to view (case sensitive)");
+                            String teamname = String.valueOf(scan.nextLine());
+                            int teamId = dbconnection.getTeamID(teamname);
+
+                            if (teamId > -1) {
+                                dbconnection.viewTeamStatistics(teamname);
+                                dbconnection.insertStewardTeamViewTracker(employeeid, teamId);
+                            } else {
+                                System.out.println("Invalid team name");
+                                break;
+                            }
+                        }
+                        else if (input2 == 7) {
+                            System.out.println(
+                                    "Do you want to remove points from a specific driver, or a specific team? (0 = driver, 1 = team)");
+                            int input3 = Integer.parseInt(scan.nextLine());
+                            if (input3 == 0) {
+                                dbconnection.viewDriverNames();
+                                System.out.println(
+                                        "Which driver would you like to update?");
+                                String drivername = String.valueOf(scan.nextLine());
+                                int driverid = dbconnection.getDriverID(drivername);
+
+                                if (driverid > -1) {
+                                    dbconnection.viewDriverStatistics(drivername);
+                                    dbconnection.insertStewardDriverViewTracker(employeeid, driverid);
+                                    System.out.println(
+                                            "How many points would you like to subtract from this driver? (Note: this will also "
+                                                    +
+                                                    "subtract from this team's points total");
+                                    int difference = Integer.parseInt(scan.nextLine());
+
+                                    dbconnection.updateDriverStatistics(driverid, difference);
+                                    int teamId = dbconnection.getTeamIDFromDriver(driverid);
+                                    dbconnection.updateTeamStatistics(teamId, difference);
+                                    dbconnection.insertStewardDriverUpdateTracker(employeeid, driverid);
+                                    dbconnection.insertStewardTeamUpdateTracker(employeeid, teamId);
+
+                                    System.out.println("");
+
+                                    String teamName = dbconnection.getTeamName(teamId);
+                                    dbconnection.viewDriverStatistics(drivername);
+                                    dbconnection.viewTeamStatistics(teamName);
+                                } else {
+                                    System.out.println("Invalid driver name");
+                                    break;
+                                }
+                            } else if (input3 == 1) {
+                                dbconnection.viewTeamNames();
+                                System.out.println(
+                                        "Which team would you like to update?");
+                                String teamname = String.valueOf(scan.nextLine());
+                                int teamId = dbconnection.getTeamID(teamname);
+
+                                if (teamId > -1) {
+                                    dbconnection.viewTeamStatistics(teamname);
+                                    dbconnection.insertStewardTeamViewTracker(employeeid, teamId);
+                                    System.out.println(
+                                            "How many points would you like to subtract from this team? ");
+                                    int difference = Integer.parseInt(scan.nextLine());
+
+                                    dbconnection.updateTeamStatistics(teamId, difference);
+                                    dbconnection.insertStewardTeamUpdateTracker(employeeid, teamId);
+
+                                    System.out.println("");
+
+                                    String teamName = dbconnection.getTeamName(teamId);
+                                    dbconnection.viewTeamStatistics(teamName);
+                                } else {
+                                    System.out.println("Invalid team name");
+                                    break;
+                                }
+                            }
+                        }
                     } else {
-                        System.out.println("Invalid employee (wrong name)");
+                        System.out.println("Invalid steward (wrong name)");
                         break;
                     }
-                }
-                if (input2 == 2) {
-                    System.out.println("Viewing driver standings");
-                    dbconnection.viewDriverStandings();
-                }
-                if (input2 == 3) {
-                    System.out.println("Viewing Team standings");
-                    dbconnection.viewTeamStandings();
-                }
-                if (input2 == 4) {
-                    System.out.println("Viewing weekend results");
-                    dbconnection.viewWeekendResults(0, input);
-                }
-                break;
-            case "st":
-                break;
-            case "ma":
-                System.out.println("Who are you? (insert name, case sensitive)");
-                String nameofmarshal = String.valueOf(scan.nextLine());
-                System.out.println(
-                        "What do you want to do?\n 1. View tasks assigned to them\n 2. Access driver results\n 3. Access team results\n "
-                                +
-                                "4. Access weekend results");
-                input2 = Integer.parseInt(scan.nextLine());
-                if (input2 == 1) {
-                    int employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
-                    if (employeeid > -1) {
-                        employerid = dbconnection.getEmployerIDFromEmployee(nameofmarshal);
-                        dbconnection.viewIndividualTasks(employeeid, employerid);
-                        System.out.println("Viewing your tasks");
-                    } else {
-                        System.out.println("Invalid marshal (wrong name)");
-                        break;
+                    break;
+                case "ma":
+                    System.out.println("Who are you? (insert name, case sensitive)");
+                    String nameofmarshal = String.valueOf(scan.nextLine());
+                    System.out.println(
+                            "What do you want to do?\n 1. View tasks assigned to them\n 2. Access driver results\n 3. Access team results\n "
+                                    +
+                                    "4. Access weekend results");
+                    input2 = Integer.parseInt(scan.nextLine());
+                    if (input2 == 1) {
+                        employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
+                        if (employeeid > -1) {
+                            employerid = dbconnection.getEmployerIDFromEmployee(nameofmarshal);
+                            dbconnection.viewIndividualTasks(employeeid, employerid);
+                            System.out.println("Viewing your tasks");
+                        } else {
+                            System.out.println("Invalid marshal (wrong name)");
+                            break;
+                        }
                     }
-                }
-                if (input2 == 2) {
-                    System.out.println("Viewing driver standings");
-                    dbconnection.viewDriverStandings();
-                }
-                if (input2 == 3) {
-                    System.out.println("Viewing Team standings");
-                    dbconnection.viewTeamStandings();
-                }
-                if (input2 == 4) {
-                    System.out.println("Viewing weekend results");
-                    dbconnection.viewWeekendResults(0, input);
-                }
-                break;
-            default:
-                System.out.println("Invalid role");
-                break;
+                    else if (input2 == 2) {
+                        System.out.println("Viewing driver standings");
+                        dbconnection.viewDriverStandings();
+                    }
+                    else if (input2 == 3) {
+                        System.out.println("Viewing Team standings");
+                        dbconnection.viewTeamStandings();
+                    }
+                    else if (input2 == 4) {
+                        System.out.println("Viewing weekend results");
+                        dbconnection.viewWeekendResults(0, input);
+                    }
+                    break;
+                case "STOP":
+                    System.out.println("Stopping");
+                    break;
+                default:
+                    System.out.println("Invalid role");
+                    break;
+            }
         }
+
         scan.close();
         dbconnection.closeConnection();
     }
