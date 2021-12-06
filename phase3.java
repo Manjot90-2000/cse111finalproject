@@ -31,10 +31,10 @@ public class phase3 {
                 PreparedStatement s2 = c.prepareStatement("PRAGMA foreign_keys; ");
                 ResultSet set = s2.executeQuery();
 
-                while(set.next()){
-                    int val = set.getInt(1);
-                    System.out.printf("%-10d\n", val);
-                }
+                //while(set.next()){
+                    //int val = set.getInt(1);
+                    //System.out.printf("%-10d\n", val);
+                //}
 
                 s1.close();
                 s2.close();
@@ -632,7 +632,7 @@ public class phase3 {
     }
 
     private void viewTasks(int _employer_id) {
-        System.out.printf("%-7s %-12s %-12s %-50s %-20s\n",
+        System.out.printf("%-7s %-12s %-12s %-75s %-20s\n",
                 "Task ID", "Employer ID", "Employee ID", "Description", "Deadline");
         try {
             String taskList = "SELECT * FROM Task WHERE employer_id = ?; ";
@@ -646,7 +646,7 @@ public class phase3 {
                 int employerid = listOfTasks.getInt(3);
                 String description = listOfTasks.getString(4);
                 String deadline = listOfTasks.getString(5);
-                System.out.printf("%-7d %-12d %-12d %-50s %-20s\n",
+                System.out.printf("%-7d %-12d %-12d %-75s %-20s\n",
                         taskID, employeeid, employerid, description, deadline);
             }
             listOfTasks.close();
@@ -1065,7 +1065,7 @@ public class phase3 {
     }
 
     private void viewIndividualTasks(int _employee_id, int _employer_id) {
-        System.out.printf("%-7s %-50s %-20s\n",
+        System.out.printf("%-7s %-75s %-20s\n",
                 "Task ID", "Description", "Deadline");
         try {
             String taskList = "SELECT task_id, description, deadline FROM Task WHERE employer_id = ? AND employee_id = ?; ";
@@ -1078,7 +1078,7 @@ public class phase3 {
                 int taskID = listOfTasks.getInt(1);
                 String description = listOfTasks.getString(2);
                 String deadline = listOfTasks.getString(3);
-                System.out.printf("%-7d %-50s %-20s\n",
+                System.out.printf("%-7d %-75s %-20s\n",
                         taskID, description, deadline);
             }
 
@@ -1382,6 +1382,33 @@ public class phase3 {
         }
     }
 
+    private void viewMarshalLocation (int _marshal_id) {
+        try {
+            String viewLocation = "SELECT tracklocation " +
+                    "FROM Marshal WHERE employee_id = ?; ";
+            PreparedStatement view = c.prepareStatement(viewLocation);
+            view.setInt(1, _marshal_id);
+            ResultSet locationSet = view.executeQuery();
+
+            while (locationSet.next()) {
+                String location = locationSet.getString(1);
+                System.out.printf("%-15s\n", location);
+            }
+
+            view.close();
+            locationSet.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+
+
     public static void main(String args[]) {
         Scanner scan = new Scanner(System.in);
         String input = " ";
@@ -1672,11 +1699,12 @@ public class phase3 {
                                     "4. Access weekend results");
                     input2 = Integer.parseInt(scan.nextLine());
                     if (input2 == 1) {
+                        System.out.println("Viewing your tasks");
                         int employeeid = dbconnection.getEmployeeID(nameofempl, input);
                         if (employeeid > -1) {
                             employerid = dbconnection.getEmployerIDFromEmployee(nameofempl);
                             dbconnection.viewIndividualTasks(employeeid, employerid);
-                            System.out.println("Viewing your tasks");
+                            
                         } else {
                             System.out.println("Invalid employee (wrong name)");
                             break;
@@ -1693,7 +1721,8 @@ public class phase3 {
                     else if (input2 == 4) {
                         System.out.println("Viewing weekend results");
                         dbconnection.viewWeekendResults(0, input);
-                    } else{
+                    }
+                    else{
                         System.out.println("Invalid operation");
                         break;
                     }
@@ -1702,15 +1731,15 @@ public class phase3 {
                     System.out.println("Who are you? (insert name, case sensitive)");
                     String nameofsteward = String.valueOf(scan.nextLine());
                     int employeeid = dbconnection.getEmployeeID(nameofsteward, input);
-                    System.out.println(
+                    // employeeid = dbconnection.getEmployeeID(nameofsteward, input);
+                    if (employeeid > -1) {
+                        // employerid = dbconnection.getEmployerIDFromEmployee(nameofemnameofstewardpl);
+                        System.out.println(
                             "What do you want to do?\n 1. View Tasks \n 2. Access driver results\n 3. Access team results\n "
                                     +
                                     "4. Access weekend results\n 5. View specific driver results\n 6. View specific team results\n " +
                                     "7. Update points\n 8. Update finishing position\n(Enter 1-8)");
-                    input2 = Integer.parseInt(scan.nextLine());
-                    // employeeid = dbconnection.getEmployeeID(nameofsteward, input);
-                    if (employeeid > -1) {
-                        // employerid = dbconnection.getEmployerIDFromEmployee(nameofemnameofstewardpl);
+                        input2 = Integer.parseInt(scan.nextLine());
                         if (input2 == 1) {
                             employerid = dbconnection.getEmployerIDFromEmployee(nameofsteward);
                             dbconnection.viewIndividualTasks(employeeid, employerid);
@@ -1840,12 +1869,10 @@ public class phase3 {
                                     int position = Integer.parseInt(scan.nextLine());
 
                                     dbconnection.updateDriverStatisticsPosition(driverid, position);
-                                    int teamId = dbconnection.getTeamIDFromDriver(driverid);
                                     dbconnection.insertStewardDriverUpdateTracker(employeeid, driverid);
 
                                     System.out.println("");
 
-                                    String teamName = dbconnection.getTeamName(teamId);
                                     dbconnection.viewDriverStatistics(drivername);
                                 } else {
                                     System.out.println("Invalid driver name");
@@ -1892,7 +1919,7 @@ public class phase3 {
                     System.out.println(
                             "What do you want to do?\n 1. View tasks assigned to them\n 2. Access driver results\n 3. Access team results\n "
                                     +
-                                    "4. Access weekend results");
+                                    "4. Access weekend results\n 5. Viewing your posted location\n (Select 1-5)");
                     input2 = Integer.parseInt(scan.nextLine());
                     if (input2 == 1) {
                         employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
@@ -1916,6 +1943,17 @@ public class phase3 {
                     else if (input2 == 4) {
                         System.out.println("Viewing weekend results");
                         dbconnection.viewWeekendResults(0, input);
+                    }
+                    else if (input2 == 5) {
+                        employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
+                        System.out.println(employeeid);
+                        if (employeeid > -1) {
+                            System.out.println("Location");
+                            dbconnection.viewMarshalLocation(employeeid);
+                        } else {
+                            System.out.println("Invalid employee (wrong name)");
+                            break;
+                        }
                     }
                     else{
                         System.out.println("Invalid operation");
