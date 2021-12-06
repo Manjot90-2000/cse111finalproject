@@ -1,6 +1,9 @@
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
+
+import org.sqlite.javax.SQLiteConnectionPoolDataSource;
+
 import java.util.Date;
 
 public class phase3 {
@@ -24,6 +27,13 @@ public class phase3 {
 
                 //Statement s = c.createStatement();
                 //s.executeUpdate("PRAGMA foreign_keys = ON; ");
+                org.sqlite.SQLiteConfig config = new org.sqlite.SQLiteConfig();
+                config.enforceForeignKeys(true);
+
+
+                SQLiteConnectionPoolDataSource dataSource = new SQLiteConnectionPoolDataSource();
+                dataSource.setUrl("jdbc:sqlite:" + _dbName.replace("\\", "/"));
+                dataSource.setConfig(config);
 
                 PreparedStatement s1 = c.prepareStatement("PRAGMA foreign_keys = ON; ");
                 s1.executeUpdate();
@@ -1642,7 +1652,9 @@ public class phase3 {
                                 dbconnection.createTaskAll(teamid, desc, time);
                             } else if (confirm == 1) {
                                 dbconnection.viewEmployees(teamid);
-                                // dbconnection.createTaskOne(teamid, desc, time);
+                                System.out.println("Which employee do you want to delegate to this task? (select ID)");
+                                int _employee_id = Integer.parseInt(scan.nextLine());
+                                dbconnection.createTaskOne(teamid, desc, time, _employee_id);
                                 System.out.println("Inserting 1");
                             } else {
                                 System.out.println("Improper operation");
@@ -1924,9 +1936,9 @@ public class phase3 {
                     if (input2 == 1) {
                         employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
                         if (employeeid > -1) {
+                            System.out.println("Viewing your tasks");
                             employerid = dbconnection.getEmployerIDFromEmployee(nameofmarshal);
                             dbconnection.viewIndividualTasks(employeeid, employerid);
-                            System.out.println("Viewing your tasks");
                         } else {
                             System.out.println("Invalid marshal (wrong name)");
                             break;
@@ -1959,6 +1971,7 @@ public class phase3 {
                         System.out.println("Invalid operation");
                         break;
                     }
+                    break;
                 case "STOP":
                     System.out.println("Stopping");
                     break;
