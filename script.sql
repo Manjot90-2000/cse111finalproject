@@ -1095,3 +1095,8 @@ WHERE employer_id = 22;
 SELECT Dr.name, Team.name, Dr.wins, Dr.points, Dr.overallstanding, Dr.gpposition, Dr.fastestlap
 FROM Driver Dr, Team
 WHERE Dr.team_id = Team.employer_id AND Team.employer_id = 1;
+
+
+SELECT Spectator.name, Event.name, Event.location, Event.time
+FROM Spectator, SpectatorEvents, Event
+WHERE Spectator.spec_id = SpectatorEvents.spec_id AND SpectatorEvents.event_id = Event.event_id AND Spectator.spec_id = 13;

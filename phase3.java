@@ -128,6 +128,58 @@ public class phase3 {
         }
     }
 
+    private void viewSpecEvents(int _spec_id) {
+        System.out.printf("%-8s %-30s %-30s %-50s %-20s\n",
+                "Event ID", "User", "Event Name", "Location", "Time");
+        try {
+            String eventList = "SELECT Event.event_id, Spectator.name, Event.name, Event.location, Event.time " +
+            "FROM Spectator, SpectatorEvents, Event " +
+            "WHERE Spectator.spec_id = SpectatorEvents.spec_id AND SpectatorEvents.event_id = Event.event_id AND Spectator.spec_id = ?; ";
+            PreparedStatement list = c.prepareStatement(eventList);
+            list.setInt(1, _spec_id);
+            ResultSet listofEvents = list.executeQuery();
+
+            while (listofEvents.next()) {
+                int eventid = listofEvents.getInt(1);
+                String specname = listofEvents.getString(2);
+                String eventname = listofEvents.getString(3);
+                String location = listofEvents.getString(4);
+                String time = listofEvents.getString(5);
+                System.out.printf("%-8s %-30s %-30s %-50s %-20s\n", eventid, specname, eventname, location, time);
+            }
+
+            listofEvents.close();
+            list.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
+    private void deleteSpecEvents(int _spec_id, int _event_id) {
+        try {
+            String specEventDelete = "DELETE FROM SpectatorEvents WHERE spec_id = ? AND event_id = ?; ";
+            PreparedStatement deletestmt = c.prepareStatement(specEventDelete);
+            deletestmt.setInt(1, _spec_id);
+            deletestmt.setInt(2, _event_id);
+            deletestmt.executeUpdate();
+
+            c.commit();
+            deletestmt.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            try {
+                c.rollback();
+            } catch (Exception e1) {
+                System.err.println(e1.getClass().getName() + ": " + e1.getMessage());
+            }
+        }
+    }
+
     // NOTE: Consider using a location field in Spectator.
     private int getSpecID(String _name) {
         try {
@@ -1355,7 +1407,8 @@ public class phase3 {
                     System.out.println(
                             "What do you want to do?\n 1. View/Sign up for events\n 2. View Driver Standings\n 3. View team standings\n 4. View "
                                     +
-                                    "specific driver\n 5. View specific team\n 6. View race weekend results\n(Enter 1-6)");
+                                    "specific driver\n 5. View specific team\n 6. View race weekend results\n 7. View registered events\n " +
+                                    "8. Delete from your registered events\n(Enter 1-8)");
                     int input2 = Integer.parseInt(scan.nextLine());
 
                     if (input2 == 1) {
@@ -1427,6 +1480,15 @@ public class phase3 {
                     } else if (input2 == 6) {
                         userId = dbconnection.getSpecID(nameofsp);
                         dbconnection.viewWeekendResults(userId, input);
+                    } else if (input2 == 7) {
+                        System.out.println("Viewing your registered events");
+                        dbconnection.viewSpecEvents(userId);
+                    } else if (input2 == 8) {
+                        System.out.println("Viewing your registered events");
+                        dbconnection.viewSpecEvents(userId);
+                        System.out.println("Which events would you like to unregister for? (Select ID)");
+                        int eventId = Integer.parseInt(scan.nextLine());
+                        dbconnection.deleteSpecEvents(userId, eventId);
                     } else {
                         System.out.println("Improper operation");
                     }
