@@ -10,6 +10,7 @@ public class phase3 {
     private Connection c = null;
     private String dbName;
     private boolean isConnected = false;
+    org.sqlite.SQLiteConfig config;
 
     private void openConnection(String _dbName) {
         dbName = _dbName;
@@ -17,36 +18,28 @@ public class phase3 {
         if (isConnected == false) {
             System.out.println("Opening: " + _dbName);
             try {
+                config = new org.sqlite.SQLiteConfig();
+                config.enforceForeignKeys(true);
                 String connectionString = new String("jdbc:sqlite:");
                 connectionString += dbName;
 
                 Class.forName("org.sqlite.JDBC"); // registers jdbc driver
 
-                c = DriverManager.getConnection(connectionString); // open connection
+                c = DriverManager.getConnection(connectionString, config.toProperties()); // open connection
                 c.setAutoCommit(false); // disables autotransactions
-
-                //Statement s = c.createStatement();
-                //s.executeUpdate("PRAGMA foreign_keys = ON; ");
-                org.sqlite.SQLiteConfig config = new org.sqlite.SQLiteConfig();
-                config.enforceForeignKeys(true);
-
-
-                SQLiteConnectionPoolDataSource dataSource = new SQLiteConnectionPoolDataSource();
-                dataSource.setUrl("jdbc:sqlite:" + _dbName.replace("\\", "/"));
-                dataSource.setConfig(config);
-
-                PreparedStatement s1 = c.prepareStatement("PRAGMA foreign_keys = ON; ");
-                s1.executeUpdate();
+                
+                //PreparedStatement s1 = c.prepareStatement("PRAGMA foreign_keys = ON; ");
+                //s1.executeUpdate();
 
                 PreparedStatement s2 = c.prepareStatement("PRAGMA foreign_keys; ");
                 ResultSet set = s2.executeQuery();
 
-                //while(set.next()){
-                    //int val = set.getInt(1);
-                    //System.out.printf("%-10d\n", val);
-                //}
+                /* while(set.next()){
+                    int val = set.getInt(1);
+                    System.out.printf("%-10d\n", val);
+                } */
 
-                s1.close();
+                //s1.close();
                 s2.close();
                 set.close();
 
