@@ -990,9 +990,9 @@ public class phase3 {
                 System.out.printf("%-30s %-35s %-12s %-7d\n", drivername, teamname, gpposition, points);
             }
             if (role.equals("sp")) {
-                insertSpecDriverViewTracker(viewerid, 0);
+                //insertSpecDriverViewTracker(viewerid, 0);
             } else if (role.equals("st")) {
-                insertStewardDriverViewTracker(viewerid, 0);
+                //insertStewardDriverViewTracker(viewerid, 0);
             }
 
             weekendResults.close();
@@ -1010,12 +1010,14 @@ public class phase3 {
     private int getEmployeeID(String _name, String role) {
         try {
             String getID = "";
-            if (role.equals("marshal")) {
+
+            //System.out.print(_name + " " + role);
+            if (role.equals("ma")) {
                 getID = "SELECT Marshal.employee_id " +
                         "FROM Employee, Marshal " +
                         "WHERE Employee.employee_id = Marshal.employee_id AND marshal.name = ?; ";
             }
-            if (role.equals("steward")) {
+            else if (role.equals("st")) {
                 getID = "SELECT Steward.employee_id " +
                         "FROM Employee, Steward " +
                         "WHERE Employee.employee_id = Steward.employee_id AND steward.name = ?; ";
@@ -1023,6 +1025,7 @@ public class phase3 {
                 getID = "SELECT employee_id " +
                         "FROM Employee " +
                         "WHERE name = ?; ";
+                //System.out.println("Default");
             }
             PreparedStatement fetch = c.prepareStatement(getID);
             fetch.setString(1, _name);
@@ -1466,7 +1469,7 @@ public class phase3 {
                         userId = dbconnection.getSpecID(nameofsp);
                         dbconnection.viewDriverStandings();
                         if (userId > -1) {
-                            dbconnection.insertSpecDriverViewTracker(userId, 0);
+                            //dbconnection.insertSpecDriverViewTracker(userId, 0);
                         }
                     } else if (input2 == 3) {
                         System.out.println("Viewing Team Standings");
@@ -1475,7 +1478,7 @@ public class phase3 {
                         dbconnection.viewTeamStandings();
 
                         if (userId > -1) {
-                            dbconnection.insertSpecTeamViewTracker(userId, 0);
+                            //dbconnection.insertSpecTeamViewTracker(userId, 0);
                         }
                     } else if (input2 == 4) {
                         dbconnection.viewDriverNames();
@@ -1753,13 +1756,13 @@ public class phase3 {
                         else if (input2 == 2) {
                             System.out.println("Viewing Driver Standings");
                             dbconnection.viewDriverStandings();
-                            dbconnection.insertStewardDriverViewTracker(employeeid, 0);
+                            //dbconnection.insertStewardDriverViewTracker(employeeid, 0);
                         }
 
                         else if (input2 == 3) {
                             System.out.println("Viewing Team Standings");
                             dbconnection.viewTeamStandings();
-                            dbconnection.insertStewardTeamViewTracker(employeeid, 0);
+                            //dbconnection.insertStewardTeamViewTracker(employeeid, 0);
                         }
 
                         else if (input2 == 4) {
@@ -1807,22 +1810,26 @@ public class phase3 {
 
                                 if (driverid > -1) {
                                     dbconnection.viewDriverStatistics(drivername);
+                                    int teamId = dbconnection.getTeamIDFromDriver(driverid);
+                                    String teamName = dbconnection.getTeamName(teamId);
+                                    dbconnection.viewTeamStatistics(teamName);
                                     dbconnection.insertStewardDriverViewTracker(employeeid, driverid);
+                                    dbconnection.insertStewardTeamViewTracker(employeeid, teamId);
                                     System.out.println(
                                             "How many points would you like to subtract from this driver? (Note: this will also "
                                                     +
-                                                    "subtract from this team's points total");
+                                                    "subtract from this team's points total)");
                                     int difference = Integer.parseInt(scan.nextLine());
 
                                     dbconnection.updateDriverStatistics(driverid, difference);
-                                    int teamId = dbconnection.getTeamIDFromDriver(driverid);
+                                    //int teamId = dbconnection.getTeamIDFromDriver(driverid);
                                     dbconnection.updateTeamStatistics(teamId, difference);
                                     dbconnection.insertStewardDriverUpdateTracker(employeeid, driverid);
                                     dbconnection.insertStewardTeamUpdateTracker(employeeid, teamId);
 
                                     System.out.println("");
 
-                                    String teamName = dbconnection.getTeamName(teamId);
+                                    //String teamName = dbconnection.getTeamName(teamId);
                                     dbconnection.viewDriverStatistics(drivername);
                                     dbconnection.viewTeamStatistics(teamName);
                                 } else {
@@ -1928,6 +1935,7 @@ public class phase3 {
                     input2 = Integer.parseInt(scan.nextLine());
                     if (input2 == 1) {
                         employeeid = dbconnection.getEmployeeID(nameofmarshal, input);
+                        //System.out.println(employeeid);
                         if (employeeid > -1) {
                             System.out.println("Viewing your tasks");
                             employerid = dbconnection.getEmployerIDFromEmployee(nameofmarshal);
